@@ -1,0 +1,49 @@
+{
+  "name": "rich-js-ink",
+  "version": "0.0.1",
+  "description": "Ink components for rich-js — Rich terminal renderables as React components",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "demo": "tsc && node dist/demo.js"
+  },
+  "keywords": [
+    "terminal",
+    "rich",
+    "ink",
+    "react",
+    "tui",
+    "cli",
+    "ansi"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ink": "^7.0.0",
+    "react": "^19.2.5",
+    "rich-js": "file:../rich-js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.4"
+  }
+}
