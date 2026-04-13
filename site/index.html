@@ -3,12 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>rich-js-ink — Component Gallery</title>
+  <title>rich-js-ink — Live Playground</title>
+  <link rel="stylesheet" href="xterm.css">
   <style>
     :root {
       --bg: #0d1117;
       --bg-surface: #161b22;
+      --bg-elevated: #1c2129;
       --border: #30363d;
+      --border-active: #58a6ff;
       --text: #c9d1d9;
       --text-muted: #8b949e;
       --accent: #58a6ff;
@@ -16,6 +19,7 @@
       --green: #3fb950;
       --purple: #bc8cff;
       --orange: #f0883e;
+      --red: #ff7b72;
       --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", Consolas, monospace;
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     }
@@ -27,166 +31,197 @@
       color: var(--text);
       font-family: var(--font-sans);
       line-height: 1.6;
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
     }
 
     #app {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem 4rem;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
 
+    /* Header */
     header {
       text-align: center;
-      padding: 3rem 0 2rem;
+      padding: 1rem 1.5rem;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 3rem;
+      flex-shrink: 0;
     }
 
     header h1 {
       font-family: var(--font-mono);
-      font-size: 2.5rem;
+      font-size: 1.5rem;
       font-weight: 700;
       background: linear-gradient(135deg, var(--accent), var(--purple));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: 0.5rem;
+      display: inline;
     }
 
     header .tagline {
       color: var(--text-muted);
-      font-size: 1.15rem;
-      max-width: 600px;
-      margin: 0 auto 0.5rem;
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
     }
 
     header .tagline-sub {
       color: var(--text-muted);
-      font-size: 0.95rem;
-      margin: 0 auto 1.5rem;
-    }
-
-    header .tagline-sub a { color: var(--accent); text-decoration: none; }
-    header .tagline-sub a:hover { text-decoration: underline; }
-
-    .badges {
-      display: flex;
-      gap: 0.75rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 0.25rem 0.75rem;
-      border-radius: 999px;
-      font-family: var(--font-mono);
       font-size: 0.8rem;
-      font-weight: 500;
     }
 
-    .badge-components { background: var(--accent-subtle); color: var(--accent); border: 1px solid var(--accent); }
-    .badge-hooks { background: #3fb95022; color: var(--green); border: 1px solid var(--green); }
-    .badge-animated { background: #f0883e22; color: var(--orange); border: 1px solid var(--orange); }
-
-    .architecture {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 3rem;
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      line-height: 1.8;
-      color: var(--text-muted);
-      text-align: center;
-    }
-
-    .architecture .flow { color: var(--text); }
-    .architecture .arrow { color: var(--accent); }
-
-    .demo-section { margin-bottom: 3rem; }
-
-    .demo-section h2 {
-      font-family: var(--font-mono);
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--accent);
-      margin-bottom: 0.25rem;
-    }
-
-    .description {
-      color: var(--text-muted);
-      margin-bottom: 1rem;
-      font-size: 0.95rem;
-    }
-
-    .demo-grid {
+    /* 3-column playground */
+    .playground {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      align-items: start;
+      grid-template-columns: 220px 1fr 1fr;
+      flex: 1;
+      min-height: 0;
+      border-bottom: 1px solid var(--border);
     }
 
-    @media (max-width: 900px) {
-      .demo-grid { grid-template-columns: 1fr; }
+    .col {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border-right: 1px solid var(--border);
     }
 
-    .panel-label {
+    .col:last-child { border-right: none; }
+
+    .col-header {
       font-family: var(--font-mono);
       font-size: 0.7rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: var(--text-muted);
-      padding: 0.5rem 1rem 0.25rem;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-surface);
+      flex-shrink: 0;
     }
 
-    .code-panel, .output-panel {
+    /* Column 1: Selector */
+    .col-selector {
       background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      overflow-y: auto;
+    }
+
+    .demo-list {
+      list-style: none;
+      padding: 0.25rem 0;
+    }
+
+    .demo-item {
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: background 0.1s, border-color 0.1s;
+    }
+
+    .demo-item:hover {
+      background: var(--bg-elevated);
+    }
+
+    .demo-item.active {
+      background: var(--accent-subtle);
+      border-left-color: var(--accent);
+    }
+
+    .demo-title {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .demo-item.active .demo-title {
+      color: var(--accent);
+    }
+
+    .demo-desc {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.3;
+      margin-top: 0.15rem;
+    }
+
+    /* Column 2: Editor */
+    .col-editor {
+      background: var(--bg);
+    }
+
+    #editor-mount {
+      flex: 1;
+      min-height: 0;
       overflow: hidden;
     }
 
-    .code-panel pre {
-      padding: 0.75rem 1rem 1rem;
-      overflow-x: auto;
+    #editor-mount .cm-editor {
+      height: 100%;
+    }
+
+    /* Column 3: Terminal */
+    .col-terminal {
+      background: var(--bg);
+      position: relative;
+    }
+
+    #terminal-mount {
+      flex: 1;
+      min-height: 0;
+      padding: 0.5rem;
+      overflow: hidden;
+    }
+
+    .error-display {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ff7b7222;
+      border-top: 1px solid var(--red);
+      color: var(--red);
       font-family: var(--font-mono);
-      font-size: 0.82rem;
-      line-height: 1.5;
+      font-size: 0.8rem;
+      padding: 0.5rem 0.75rem;
+      max-height: 30%;
+      overflow-y: auto;
+      white-space: pre-wrap;
     }
 
-    .code-panel code { color: var(--text); }
-
-    .terminal-mount {
-      padding: 0.25rem 0.5rem 0.5rem;
-    }
-
-    /* Override xterm.js background to match our surface */
-    .terminal-mount .xterm { background: transparent; }
-
+    /* Footer */
     footer {
       text-align: center;
-      padding: 2rem 0;
-      border-top: 1px solid var(--border);
-      margin-top: 2rem;
+      padding: 0.5rem;
       color: var(--text-muted);
-      font-size: 0.9rem;
+      font-size: 0.8rem;
+      flex-shrink: 0;
     }
 
     footer a { color: var(--accent); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
+
+    /* Responsive: stack on narrow screens */
+    @media (max-width: 900px) {
+      body { overflow: auto; }
+      #app { height: auto; }
+      .playground {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 300px 300px;
+      }
+      .col { border-right: none; border-bottom: 1px solid var(--border); }
+      .col-selector { max-height: 200px; }
+    }
   </style>
 </head>
 <body>
   <div id="app">
-    <p style="text-align: center; color: #8b949e; padding: 4rem 0;">Loading demos...</p>
+    <p style="text-align: center; color: #8b949e; padding: 4rem 0;">Loading playground...</p>
   </div>
-  <link rel="stylesheet" href="xterm.css">
   <script type="module" src="main.js"></script>
 </body>
 </html>

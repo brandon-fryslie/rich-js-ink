@@ -6,16 +6,22 @@
     "build": "tsx esbuild.config.ts"
   },
   "dependencies": {
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/state": "^6.6.0",
+    "@codemirror/theme-one-dark": "^6.1.3",
+    "@codemirror/view": "^6.41.0",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
     "buffer": "^6.0.3",
+    "codemirror": "^6.0.2",
     "events": "^3.3.0",
     "ink": "^7.0.0",
     "react": "^19.2.5",
     "readable-stream": "^4.7.0",
     "rich-js": "file:../../rich-js",
     "rich-js-ink": "file:..",
-    "string_decoder": "^1.3.0"
+    "string_decoder": "^1.3.0",
+    "sucrase": "^3.35.1"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
