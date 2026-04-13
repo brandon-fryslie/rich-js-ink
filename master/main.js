@@ -86569,7 +86569,8 @@ var Playground = class {
         stdin: stdin2,
         stderr: stderr2,
         exitOnCtrlC: false,
-        patchConsole: false
+        patchConsole: false,
+        interactive: true
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
