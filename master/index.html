@@ -8,7 +8,6 @@
     :root {
       --bg: #0d1117;
       --bg-surface: #161b22;
-      --bg-elevated: #1c2129;
       --border: #30363d;
       --text: #c9d1d9;
       --text-muted: #8b949e;
@@ -31,13 +30,12 @@
       min-height: 100vh;
     }
 
-    .container {
+    #app {
       max-width: 1200px;
       margin: 0 auto;
       padding: 2rem 1.5rem 4rem;
     }
 
-    /* Header */
     header {
       text-align: center;
       padding: 3rem 0 2rem;
@@ -60,8 +58,17 @@
       color: var(--text-muted);
       font-size: 1.15rem;
       max-width: 600px;
+      margin: 0 auto 0.5rem;
+    }
+
+    header .tagline-sub {
+      color: var(--text-muted);
+      font-size: 0.95rem;
       margin: 0 auto 1.5rem;
     }
+
+    header .tagline-sub a { color: var(--accent); text-decoration: none; }
+    header .tagline-sub a:hover { text-decoration: underline; }
 
     .badges {
       display: flex;
@@ -85,7 +92,6 @@
     .badge-hooks { background: #3fb95022; color: var(--green); border: 1px solid var(--green); }
     .badge-animated { background: #f0883e22; color: var(--orange); border: 1px solid var(--orange); }
 
-    /* Architecture block */
     .architecture {
       background: var(--bg-surface);
       border: 1px solid var(--border);
@@ -99,18 +105,10 @@
       text-align: center;
     }
 
-    .architecture .flow {
-      color: var(--text);
-    }
+    .architecture .flow { color: var(--text); }
+    .architecture .arrow { color: var(--accent); }
 
-    .architecture .arrow {
-      color: var(--accent);
-    }
-
-    /* Demo sections */
-    .demo-section {
-      margin-bottom: 3rem;
-    }
+    .demo-section { margin-bottom: 3rem; }
 
     .demo-section h2 {
       font-family: var(--font-mono);
@@ -134,9 +132,7 @@
     }
 
     @media (max-width: 900px) {
-      .demo-grid {
-        grid-template-columns: 1fr;
-      }
+      .demo-grid { grid-template-columns: 1fr; }
     }
 
     .panel-label {
@@ -146,7 +142,7 @@
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: var(--text-muted);
-      padding: 0.5rem 1rem 0;
+      padding: 0.5rem 1rem 0.25rem;
     }
 
     .code-panel, .output-panel {
@@ -156,7 +152,7 @@
       overflow: hidden;
     }
 
-    .code-panel pre, .output-panel pre {
+    .code-panel pre {
       padding: 0.75rem 1rem 1rem;
       overflow-x: auto;
       font-family: var(--font-mono);
@@ -164,22 +160,15 @@
       line-height: 1.5;
     }
 
-    .code-panel code {
-      color: var(--text);
+    .code-panel code { color: var(--text); }
+
+    .terminal-mount {
+      padding: 0.25rem 0.5rem 0.5rem;
     }
 
-    .terminal-output {
-      background: var(--bg) !important;
-      border-top: 1px solid var(--border);
-      color: var(--text);
-      white-space: pre;
-    }
+    /* Override xterm.js background to match our surface */
+    .terminal-mount .xterm { background: transparent; }
 
-    .output-panel .terminal-output {
-      border-top: none;
-    }
-
-    /* Footer */
     footer {
       text-align: center;
       padding: 2rem 0;
@@ -189,278 +178,16 @@
       font-size: 0.9rem;
     }
 
-    footer a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    footer a:hover {
-      text-decoration: underline;
-    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>rich-js-ink</h1>
-      <p class="tagline">Rich terminal renderables as declarative React components for Ink</p>
-      <div class="badges">
-        <span class="badge badge-components">16 components</span>
-        <span class="badge badge-hooks">4 hooks</span>
-        <span class="badge badge-animated">animated + interactive</span>
-      </div>
-    </header>
-
-    <div class="architecture">
-      <span class="flow">Props</span>
-      <span class="arrow"> &rarr; </span>
-      <span class="flow">rich-js Renderable</span>
-      <span class="arrow"> &rarr; </span>
-      <span class="flow">Segment[]</span>
-      <span class="arrow"> &rarr; </span>
-      <span class="flow">ANSI string</span>
-      <span class="arrow"> &rarr; </span>
-      <span class="flow">&lt;Text&gt;{ansi}&lt;/Text&gt;</span>
-    </div>
-
-
-    <section class="demo-section">
-      <h2>RichPanel</h2>
-      <p class="description">Bordered box with title, supporting Rich markup in content.</p>
-      <div class="demo-grid">
-        <div class="code-panel">
-          <div class="panel-label">JSX</div>
-          <pre><code>&lt;RichPanel title="Hello" box={ROUNDED} style="cyan"&gt;
-  {"This is a [bold magenta]rich-js[/] Panel\nrendered inside Ink!"}
-&lt;/RichPanel&gt;</code></pre>
-        </div>
-        <div class="output-panel">
-          <div class="panel-label">Output</div>
-          <pre class="terminal-output">&#x256D;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; Hello &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x256E;<br/>&#x2502;<span style="color:#0AA"> <span style="color:#c9d1d9">This is a <span style="color:#A0A"><b>rich-js<span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9"> Panel<span style="color:#0AA">                                              <span style="color:#c9d1d9">&#x2502;<br/>&#x2502;<span style="color:#0AA"> <span style="color:#c9d1d9">rendered inside Ink!<span style="color:#0AA">                                                 <span style="color:#c9d1d9">&#x2502;<br/>&#x2570;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x256F;<br/></span></span></span></span></span></span></span></span></b></span></span></span></pre>
-        </div>
-      </div>
-    </section>
-
-    <section class="demo-section">
-      <h2>RichTable</h2>
-      <p class="description">Declarative table from column definitions and row data.</p>
-      <div class="demo-grid">
-        <div class="code-panel">
-          <div class="panel-label">JSX</div>
-          <pre><code>&lt;RichTable
-  columns={[
-    { header: "Name", style: "bold" },
-    { header: "Language" },
-    { header: "Stars", justify: "right" },
-  ]}
-  rows={[
-    ["Rich", "Python", "50k"],
-    ["rich-js", "TypeScript", "new"],
-    ["Ink", "TypeScript", "28k"],
-  ]}
-  box={DOUBLE}
-/&gt;</code></pre>
-        </div>
-        <div class="output-panel">
-          <div class="panel-label">Output</div>
-          <pre class="terminal-output">&#x2554;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2566;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2566;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2557;<br/>&#x2551; <b>Name   <span style="font-weight:normal;text-decoration:none;font-style:normal"> &#x2551; <b>Language  <span style="font-weight:normal;text-decoration:none;font-style:normal"> &#x2551; <b>Stars<span style="font-weight:normal;text-decoration:none;font-style:normal"> &#x2551;<br/>&#x2551;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2551;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2551;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2551;<br/>&#x2551; Rich    &#x2551; Python     &#x2551;   50k &#x2551;<br/>&#x2551; rich-js &#x2551; TypeScript &#x2551;   new &#x2551;<br/>&#x2551; Ink     &#x2551; TypeScript &#x2551;   28k &#x2551;<br/>&#x255A;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2569;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2569;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x255D;<br/></span></b></span></b></span></b></pre>
-        </div>
-      </div>
-    </section>
-
-    <section class="demo-section">
-      <h2>RichTree</h2>
-      <p class="description">Tree from nested data structure with styled guides.</p>
-      <div class="demo-grid">
-        <div class="code-panel">
-          <div class="panel-label">JSX</div>
-          <pre><code>&lt;RichTree
-  root={{
-    label: "src/",
-    children: [
-      { label: "core/", children: [
-        { label: "color.ts" },
-        { label: "style.ts" },
-        { label: "segment.ts" },
-      ]},
-      { label: "renderables/", children: [
-        { label: "panel.ts" },
-        { label: "table.ts" },
-      ]},
-    ],
-  }}
-  guide_style="dim cyan"
-/&gt;</code></pre>
-        </div>
-        <div class="output-panel">
-          <div class="panel-label">Output</div>
-          <pre class="terminal-output">src/<br/><br/><span style="color:#0AA">&#x251C;&#x2500;&#x2500; <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">core/<br/><br/>&#x2502;   color.ts<br/><br/>&#x2502;   style.ts<br/><br/>&#x2502;   segment.ts<br/><br/><span style="color:#0AA">&#x2514;&#x2500;&#x2500; <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">renderables/<br/><br/>    panel.ts<br/><br/>    table.ts<br/><br/></span></span></span></span></span></span></pre>
-        </div>
-      </div>
-    </section>
-
-    <section class="demo-section">
-      <h2>RichMarkup</h2>
-      <p class="description">Render Rich markup strings with inline styling — the simplest bridge.</p>
-      <div class="demo-grid">
-        <div class="code-panel">
-          <div class="panel-label">JSX</div>
-          <pre><code>&lt;RichMarkup&gt;{"[bold cyan]Hello[/] [dim]world[/] [italic green]from rich-js![/]"}&lt;/RichMarkup&gt;</code></pre>
-        </div>
-        <div class="output-panel">
-          <div class="panel-label">Output</div>
-          <pre class="terminal-output"><span style="color:#0AA"><b>Hello<span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9"> world<span style="font-weight:normal;text-decoration:none;font-style:normal"> <span style="color:#0A0"><i>from rich-js!</i><span style="color:#c9d1d9"><br/></span></span></span></span></span></b></span></pre>
-        </div>
-      </div>
-    </section>
-
-    <section class="demo-section">
-      <h2>RichRule</h2>
-      <p class="description">Horizontal divider with optional centered title.</p>
-      <div class="demo-grid">
-        <div class="code-panel">
-          <div class="panel-label">JSX</div>
-          <pre><code>&lt;RichRule title="Section Divider" style="blue" /&gt;</code></pre>
-        </div>
-        <div class="output-panel">
-          <div class="panel-label">Output</div>
-          <pre class="terminal-output"><span style="color:#00A">&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; Section Divider &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;<span style="color:#c9d1d9"><br/></span></span></pre>
-        </div>
-      </div>
-    </section>
-
-    <section class="demo-section">
-      <h2>RichSyntax</h2>
-      <p class="description">Syntax-highlighted source code with line numbers.</p>
-      <div class="demo-grid">
-        <div class="code-panel">
-          <div class="panel-label">JSX</div>
-          <pre><code>&lt;RichSyntax language="typescript" lineNumbers&gt;
-  {`function greet(name: string): string {
-  return \`Hello, \${name}!\`;
-}`}
-&lt;/RichSyntax&gt;</code></pre>
-        </div>
-        <div class="output-panel">
-          <div class="panel-label">Output</div>
-          <pre class="terminal-output">1 &#x2502; <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#A0A"><b>function<span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9"> greet(name: string): string {<br/>2 &#x2502; <span style="font-weight:normal;text-decoration:none;font-style:normal">  <span style="color:#A0A"><b>return<span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9"> <span style="color:#0A0">`Hello, ${name}!`<span style="color:#c9d1d9">;<br/>3 &#x2502; <span style="font-weight:normal;text-decoration:none;font-style:normal">}<br/></span></span></span></span></span></b></span></span></span></span></b></span></span></pre>
-        </div>
-      </div>
-    </section>
-
-    <section class="demo-section">
-      <h2>RichMarkdown</h2>
-      <p class="description">Rendered Markdown with headings, bold, and inline code.</p>
-      <div class="demo-grid">
-        <div class="code-panel">
-          <div class="panel-label">JSX</div>
-          <pre><code>&lt;RichMarkdown&gt;{"# Welcome\n\nThis is **bold** and `inline code`."}&lt;/RichMarkdown&gt;</code></pre>
-        </div>
-        <div class="output-panel">
-          <div class="panel-label">Output</div>
-          <pre class="terminal-output"><b><u>Welcome</u><span style="font-weight:normal;text-decoration:none;font-style:normal"><br/><br/><br/>This is <b>bold<span style="font-weight:normal;text-decoration:none;font-style:normal"> and <span style="color:#0AA"><span style="background-color:#1c1c1c">inline code<span style="background-color:#0d1117"><span style="color:#c9d1d9">.<br/><br/></span></span></span></span></span></b></span></b></pre>
-        </div>
-      </div>
-    </section>
-
-    <section class="demo-section">
-      <h2>RichJSON</h2>
-      <p class="description">Syntax-highlighted, formatted JSON display.</p>
-      <div class="demo-grid">
-        <div class="code-panel">
-          <div class="panel-label">JSX</div>
-          <pre><code>&lt;RichJSON
-  data={{ name: "rich-js-ink", version: "0.0.1", features: ["panels", "tables", "spinners"] }}
-  indent={2}
-/&gt;</code></pre>
-        </div>
-        <div class="output-panel">
-          <div class="panel-label">Output</div>
-          <pre class="terminal-output"><b>{<span style="font-weight:normal;text-decoration:none;font-style:normal"><br/>  <span style="color:#00A"><b>&quot;name&quot;<span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">: <span style="color:#0A0">&quot;rich-js-ink&quot;<span style="color:#c9d1d9">,<br/>  <span style="color:#00A"><b>&quot;version&quot;<span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">: <span style="color:#0A0">&quot;<span style="color:#0AA">0.0<span style="color:#0A0">.<span style="color:#0AA">1<span style="color:#0A0">&quot;<span style="color:#c9d1d9">,<br/>  <span style="color:#00A"><b>&quot;features&quot;<span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">: <b>[<span style="font-weight:normal;text-decoration:none;font-style:normal"><br/>    &quot;panels&quot;,<br/>    &quot;tables&quot;,<br/>    &quot;spinners&quot;<br/>  <b>]<span style="font-weight:normal;text-decoration:none;font-style:normal"><br/><b>}<span style="font-weight:normal;text-decoration:none;font-style:normal"><br/></span></b></span></b></span></b></span></span></b></span></span></span></span></span></span></span></span></span></b></span></span></span></span></span></b></span></span></b></pre>
-        </div>
-      </div>
-    </section>
-
-    <section class="demo-section">
-      <h2>RichPretty</h2>
-      <p class="description">Pretty-printed JavaScript data structures with highlighting.</p>
-      <div class="demo-grid">
-        <div class="code-panel">
-          <div class="panel-label">JSX</div>
-          <pre><code>&lt;RichPretty data={{ users: [{ name: "Alice", role: "admin" }, { name: "Bob", role: "user" }] }} expandAll /&gt;</code></pre>
-        </div>
-        <div class="output-panel">
-          <div class="panel-label">Output</div>
-          <pre class="terminal-output">{<br/><span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   users: [<br/><span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   <span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   {<br/><span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   <span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   <span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   name: <span style="color:#0A0">&quot;Alice&quot;<span style="color:#c9d1d9">,<br/><span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   <span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   <span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   role: <span style="color:#0A0">&quot;admin&quot;<span style="color:#c9d1d9"><br/><span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   <span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   },<br/><span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   <span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   {<br/><span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   <span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   <span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   name: <span style="color:#0A0">&quot;Bob&quot;<span style="color:#c9d1d9">,<br/><span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   <span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   <span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   role: <span style="color:#0A0">&quot;user&quot;<span style="color:#c9d1d9"><br/><span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   <span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   }<br/><span style="color:#0A0"> <span style="font-weight:normal;text-decoration:none;font-style:normal"><span style="color:#c9d1d9">   ]<br/>}<br/></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
-        </div>
-      </div>
-    </section>
-
-    <section class="demo-section">
-      <h2>RichColumns</h2>
-      <p class="description">Multi-column layout from a flat list of items.</p>
-      <div class="demo-grid">
-        <div class="code-panel">
-          <div class="panel-label">JSX</div>
-          <pre><code>&lt;RichColumns items={["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"]} equal /&gt;</code></pre>
-        </div>
-        <div class="output-panel">
-          <div class="panel-label">Output</div>
-          <pre class="terminal-output">Alpha    Beta     Gamma    Delta    Epsilon  Zeta<br/></pre>
-        </div>
-      </div>
-    </section>
-
-    <section class="demo-section">
-      <h2>RichProgressBar</h2>
-      <p class="description">Progress bar driven by completed/total props. Animated by parent state updates.</p>
-      <div class="demo-grid">
-        <div class="code-panel">
-          <div class="panel-label">JSX</div>
-          <pre><code>&lt;RichProgressBar completed={65} total={100} style="green" /&gt;</code></pre>
-        </div>
-        <div class="output-panel">
-          <div class="panel-label">Output</div>
-          <pre class="terminal-output"><span style="color:#A0A">&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;<span style="color:#0A0">&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;<span style="color:#c9d1d9"></span></span></span></pre>
-        </div>
-      </div>
-    </section>
-
-    <section class="demo-section">
-      <h2>Compound: Panel + Table + Rule</h2>
-      <p class="description">Rich-js-ink components compose naturally inside Ink's flexbox layout.</p>
-      <div class="demo-grid">
-        <div class="code-panel">
-          <div class="panel-label">JSX</div>
-          <pre><code>&lt;Box flexDirection="column" gap={1}&gt;
-  &lt;RichPanel title="Dashboard" box={HEAVY} style="magenta"&gt;
-    {"[bold]System Status[/]: [green]Operational[/]"}
-  &lt;/RichPanel&gt;
-  &lt;RichRule title="Metrics" style="dim" /&gt;
-  &lt;RichTable
-    columns={[{ header: "Metric" }, { header: "Value", justify: "right" }]}
-    rows={[["Uptime", "99.97%"], ["Latency", "12ms"], ["Throughput", "1.2k/s"]]}
-    box={ROUNDED}
-  /&gt;
-&lt;/Box&gt;</code></pre>
-        </div>
-        <div class="output-panel">
-          <div class="panel-label">Output</div>
-          <pre class="terminal-output">&#x250F;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501; Dashboard &#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2513;<br/>&#x2503;<span style="color:#A0A"> <span style="color:#c9d1d9"><b>System Status<span style="font-weight:normal;text-decoration:none;font-style:normal">: <span style="color:#0A0">Operational<span style="color:#A0A">                                           <span style="color:#c9d1d9">&#x2503;<br/>&#x2517;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x2501;&#x251B;<br/><br/><br/>&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; Metrics &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;<span style="font-weight:normal;text-decoration:none;font-style:normal"><br/><br/><br/>&#x256D;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x252C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x256E;<br/>&#x2502; <b>Metric    <span style="font-weight:normal;text-decoration:none;font-style:normal"> &#x2502; <b> Value<span style="font-weight:normal;text-decoration:none;font-style:normal"> &#x2502;<br/>&#x2502;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2502;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2502;<br/>&#x2502; Uptime     &#x2502; 99.97% &#x2502;<br/>&#x2502; Latency    &#x2502;   12ms &#x2502;<br/>&#x2502; Throughput &#x2502; 1.2k/s &#x2502;<br/>&#x2570;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2534;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x256F;<br/></span></b></span></b></span></span></span></span></span></b></span></span></pre>
-        </div>
-      </div>
-    </section>
-
-    <footer>
-      <p>
-        <a href="https://github.com/brandon-fryslie/rich-js-ink">GitHub</a>
-        &nbsp;&middot;&nbsp;
-        <a href="https://github.com/brandon-fryslie/rich-js">rich-js</a>
-        &nbsp;&middot;&nbsp;
-        <a href="https://github.com/vadimdemedes/ink">Ink</a>
-      </p>
-    </footer>
+  <div id="app">
+    <p style="text-align: center; color: #8b949e; padding: 4rem 0;">Loading demos...</p>
   </div>
+  <link rel="stylesheet" href="xterm.css">
+  <script type="module" src="main.js"></script>
 <script><!-- gh-pages-multiplexer:nav-widget -->
 (function(){
   var MANIFEST_URL = "../versions.json";

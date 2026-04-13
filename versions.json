@@ -4,57 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "4951a60d8dd35b10139773b2717bce39e23344f7",
-      "timestamp": "2026-04-13T04:12:27.942Z",
+      "sha": "60808c746b8c524a802b719e9faf54e0f75b2de2",
+      "timestamp": "2026-04-13T04:45:57.549Z",
       "commits": [
         {
-          "sha": "4951a60d8dd35b10139773b2717bce39e23344f7",
+          "sha": "60808c746b8c524a802b719e9faf54e0f75b2de2",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-12T22:12:08-06:00",
-          "message": "fix(ci): use npm install instead of npm ci\n\nThe lock file drifts between local npm and CI npm versions when using\nfile: dependencies. npm install resolves from package.json directly.\n"
-        },
-        {
-          "sha": "d529139d1a355d9025371b5b8bd9e5614ef89ba9",
-          "author_name": "Brandon Fryslie",
-          "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-12T22:11:06-06:00",
-          "message": "fix(ci): capture tsc exit without triggering set -e\n\nUse `cmd || tsc_exit=$?` pattern to prevent bash -e from aborting\non tsc's non-zero exit. Verify emission by checking dist/ output.\n"
-        },
-        {
-          "sha": "d4f91e8c7290c69954a699c8c1ef9b532148186f",
-          "author_name": "Brandon Fryslie",
-          "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-12T22:10:25-06:00",
-          "message": "fix(ci): handle rich-js tsc diagnostics in build step\n\ntsc emits output even with diagnostics when noEmitOnError is unset.\nVerify emission by checking dist/index.js exists rather than trusting\nthe exit code.\n"
-        },
-        {
-          "sha": "d143f08581ef5e0a7e5fc6933f532218331436d7",
-          "author_name": "Brandon Fryslie",
-          "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-12T22:08:32-06:00",
-          "message": "refactor: Remove layout wrappers (non-goals) and fix CI\n\n- Remove RichAlign, RichPadding, RichGroup, RichLayout — Ink owns\n  layout via Yoga flexbox; wrapping these creates double-layout bugs\n- Update SPEC.md with migration guide (§8) mapping Rich layout\n  primitives to Ink's <Box> component\n- Update README, demo site, and tests to match\n- Fix CI: clone and build rich-js before npm ci (dist/ is gitignored\n  in rich-js, so github: dependency doesn't work)\n"
-        },
-        {
-          "sha": "51bba365c19ba4e5518a4edcc3a7185b3ab5aa9c",
-          "author_name": "Brandon Fryslie",
-          "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-12T19:37:17-06:00",
-          "message": "feat: Add README, tests, demo site, and gh-pages deployment\n\n- README.md with full API documentation for all 20 components, 4 hooks,\n  and re-exports\n- 48 tests across 5 test files covering all tiers (static, animated,\n  interactive, hooks, bridge layer)\n- Static demo site generator (site/build.tsx) that renders components\n  via Ink's renderToString, converts ANSI to styled HTML\n- GitHub Actions workflow using gh-pages-multiplexer for versioned\n  demo site deployment\n- Mark all SPEC.md implementation tiers as complete\n"
-        },
-        {
-          "sha": "c21de6bf6361697361bb454373e569476ea95bba",
-          "author_name": "Brandon Fryslie",
-          "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-12T06:17:32-06:00",
-          "message": "feat: Add SPEC.md and implement all component tiers\n\n- SPEC.md: comprehensive specification for all rich-js-ink components\n- Tier 2 static components: RichMarkup, RichRule, RichSyntax, RichMarkdown,\n  RichJSON, RichPretty, RichColumns, RichTraceback\n- Tier 3 wrappers/context: RichAlign, RichPadding, RichGroup, RichLayout,\n  RichThemeProvider, useRichTheme, useRichRenderable\n- Tier 4 animated: useSpinnerFrame, RichSpinner, RichProgressBar, RichStatus\n- Tier 5 progress: useProgress, RichProgress\n- Tier 6 interactive: RichPrompt, RichConfirm, RichSelect\n- Updated index.ts with full exports including rich-js re-exports\n- Updated demo.tsx to showcase new components\n"
-        },
-        {
-          "sha": "440784325171a4fcc255f0cdfaadf3ca38317d26",
-          "author_name": "Brandon Fryslie",
-          "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-12T05:28:23-06:00",
-          "message": "feat: Initial rich-js-ink project — Ink components for rich-js renderables\n\nBridge layer between rich-js (rendering primitives) and Ink (React terminal UI).\nIncludes core <Rich> component, plus <RichPanel>, <RichTable>, <RichTree> wrappers.\n"
+          "timestamp": "2026-04-12T22:45:30-06:00",
+          "message": "feat: Live xterm.js demo site — real Ink apps in the browser\n\nReplace static ansi-to-html rendering with live xterm.js terminals.\nEach demo section mounts a real Ink app via XtermWriteStream adapter.\nSpinners animate, progress bars advance, interactive components work.\n\n- esbuild bundles React + Ink + rich-js + xterm.js for browser\n- Custom Node polyfill plugin handles node: protocol imports\n- XtermWriteStream/XtermReadStream adapters bridge Ink to xterm.js\n- 15 live demos including animated spinners and multi-task progress\n"
         }
       ]
     }
