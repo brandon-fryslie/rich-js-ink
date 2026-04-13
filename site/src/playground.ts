@@ -197,7 +197,8 @@ export class Playground {
       cursorBlink: false,
       cursorStyle: "bar",
       cursorInactiveStyle: "none",
-      disableStdin: true,
+      disableStdin: false,
+      convertEol: true,
       fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', Consolas, monospace",
       fontSize: 13,
       lineHeight: 1.2,
@@ -278,8 +279,9 @@ export class Playground {
       this.currentInk = null;
     }
 
-    // Clear terminal
+    // Clear terminal and hide cursor (Ink manages cursor visibility)
     this.terminal?.reset();
+    this.terminal?.write("\x1b[?25l");
     this.errorEl.textContent = "";
     this.errorEl.style.display = "none";
 
