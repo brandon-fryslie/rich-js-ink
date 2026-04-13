@@ -21,16 +21,23 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Clone and build rich-js dependency
         run: |
           git clone https://github.com/brandon-fryslie/rich-js.git ../rich-js
           cd ../rich-js
           npm ci
-          npm run build
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+          # tsc emits output even with diagnostics (noEmitOnError is not set).
+          # Run tsc, then verify emission succeeded.
+          npx tsc -p tsconfig.json --noUnusedLocals false --noUnusedParameters false; tsc_exit=$?
+          if [ ! -f dist/index.js ] || [ ! -f dist/index.d.ts ]; then
+            echo "ERROR: rich-js build failed — dist/index.js or dist/index.d.ts missing"
+            exit 1
+          fi
+          echo "rich-js built successfully (tsc exit=$tsc_exit, output verified)"
 
       - run: npm ci
       - run: npm run build
