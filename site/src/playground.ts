@@ -113,7 +113,7 @@ const evalScope: Record<string, unknown> = {
   ASCII2,
 };
 
-const TERM_COLS = 80;
+const TERM_COLS = 60;
 
 export class Playground {
   private selectorEl: HTMLElement;
@@ -198,7 +198,6 @@ export class Playground {
       cursorStyle: "bar",
       cursorInactiveStyle: "none",
       disableStdin: false,
-      convertEol: true,
       fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', Consolas, monospace",
       fontSize: 13,
       lineHeight: 1.2,

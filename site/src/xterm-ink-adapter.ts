@@ -40,7 +40,10 @@ export class XtermWriteStream extends EventEmitter {
   }
 
   write(data: string | Uint8Array, callbackOrEncoding?: (() => void) | string, callback?: () => void): boolean {
-    const str = typeof data === "string" ? data : new TextDecoder().decode(data);
+    const raw = typeof data === "string" ? data : new TextDecoder().decode(data);
+    // Convert bare \n to \r\n for xterm.js (which needs CR+LF),
+    // but don't double-convert existing \r\n sequences.
+    const str = raw.replace(/\r?\n/g, "\r\n");
     this._terminal.write(str, typeof callbackOrEncoding === "function" ? callbackOrEncoding : callback);
     return true;
   }
