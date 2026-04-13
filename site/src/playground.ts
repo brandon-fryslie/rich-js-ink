@@ -15,8 +15,8 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { EditorState } from "@codemirror/state";
 import { ViewUpdate } from "@codemirror/view";
 import { transform } from "sucrase";
-import React from "react";
-import { render as inkRender, Box, Text } from "ink";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { render as inkRender, Box, Text, useInput } from "ink";
 import {
   RichPanel,
   RichTable,
@@ -32,23 +32,46 @@ import {
   RichSpinner,
   RichProgressBar,
   RichStatus,
+  RichProgress,
+  RichPrompt,
+  RichConfirm,
+  RichSelect,
   RichThemeProvider,
+  useProgress,
+  useSpinnerFrame,
+  useRichRenderable,
+  renderToString,
+  Style,
+  RichText,
+  renderMarkup,
+  ColorSystem,
+  SPINNERS,
+  DEFAULT_SPINNER,
   ROUNDED,
   DOUBLE,
   HEAVY,
   ASCII,
   SQUARE,
   MINIMAL,
+  MARKDOWN,
+  HORIZONTALS,
+  SIMPLE,
+  ASCII2,
 } from "rich-js-ink";
 import { XtermWriteStream, XtermReadStream } from "./xterm-ink-adapter.js";
 import { demos, type Demo } from "./demos.js";
 
 // --- Scope for eval'd code ---
-// All these are available inside the editor code
-const evalScope = {
+// All exports available inside the editor code
+const evalScope: Record<string, unknown> = {
   React,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
   Box,
   Text,
+  useInput,
   RichPanel,
   RichTable,
   RichTree,
@@ -63,13 +86,31 @@ const evalScope = {
   RichSpinner,
   RichProgressBar,
   RichStatus,
+  RichProgress,
+  RichPrompt,
+  RichConfirm,
+  RichSelect,
   RichThemeProvider,
+  useProgress,
+  useSpinnerFrame,
+  useRichRenderable,
+  renderToString,
+  Style,
+  RichText,
+  renderMarkup,
+  ColorSystem,
+  SPINNERS,
+  DEFAULT_SPINNER,
   ROUNDED,
   DOUBLE,
   HEAVY,
   ASCII,
   SQUARE,
   MINIMAL,
+  MARKDOWN,
+  HORIZONTALS,
+  SIMPLE,
+  ASCII2,
 };
 
 const TERM_COLS = 80;
@@ -243,17 +284,25 @@ export class Playground {
     this.errorEl.style.display = "none";
 
     try {
-      // Wrap user JSX in a component function
-      const wrappedCode = `
-        function __PlaygroundComponent() {
-          return (
-            <RichThemeProvider>
-              ${jsxCode}
-            </RichThemeProvider>
-          );
-        }
-        return __PlaygroundComponent;
-      `;
+      // Detect whether code defines its own component (has a top-level `return`)
+      // or is just JSX that needs wrapping.
+      const isComponentDef = /^(?:function|const|let|var)\s/.test(jsxCode.trim()) ||
+        jsxCode.trim().startsWith("return ");
+
+      const wrappedCode = isComponentDef
+        ? `
+          ${jsxCode}
+        `
+        : `
+          function __PlaygroundComponent() {
+            return (
+              <RichThemeProvider>
+                ${jsxCode}
+              </RichThemeProvider>
+            );
+          }
+          return __PlaygroundComponent;
+        `;
 
       // Transform JSX → JS
       const { code: jsCode } = transform(wrappedCode, {
@@ -275,7 +324,11 @@ export class Playground {
       const stdin = new XtermReadStream(this.terminal!) as unknown as NodeJS.ReadStream;
       const stderr = new XtermWriteStream(this.terminal!) as unknown as NodeJS.WriteStream;
 
-      this.currentInk = inkRender(React.createElement(Component), {
+      // Always wrap in RichThemeProvider
+      const wrapped = React.createElement(RichThemeProvider, null,
+        React.createElement(Component));
+
+      this.currentInk = inkRender(wrapped, {
         stdout,
         stdin,
         stderr,
