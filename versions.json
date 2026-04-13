@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "34b44dd29e4ac96e706f63df9174d801bf54ad0d",
-      "timestamp": "2026-04-13T11:44:03.189Z",
+      "sha": "e831ac990e692b5855b08de20c5fd44711d1bb4e",
+      "timestamp": "2026-04-13T11:44:57.403Z",
       "commits": [
         {
-          "sha": "34b44dd29e4ac96e706f63df9174d801bf54ad0d",
+          "sha": "e831ac990e692b5855b08de20c5fd44711d1bb4e",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-13T05:43:35-06:00",
-          "message": "fix(site): fix double newlines, layout overflow, terminal width\n\n- Replace convertEol with manual \\n→\\r\\n in XtermWriteStream to avoid\n  double line feeds from Ink's cursor management\n- Reduce terminal to 60 cols so it fits the column\n- Use minmax(0,1fr) grid columns to prevent overflow\n- Add overflow:hidden on terminal column\n"
+          "timestamp": "2026-04-13T05:44:33-06:00",
+          "message": "fix(site): enable soft wrap in CodeMirror editor\n"
         }
       ]
     }

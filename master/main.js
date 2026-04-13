@@ -16065,7 +16065,6 @@ __export(empty_module_exports, {
 var empty_module_default;
 var init_empty_module = __esm({
   "src/empty-module.ts"() {
-    "use strict";
     init_define_process_argv();
     init_define_process_env();
     init_define_process_versions();
@@ -87363,6 +87362,7 @@ var Playground = class {
           javascript({ jsx: true, typescript: true }),
           oneDark,
           updateListener2,
+          EditorView.lineWrapping,
           EditorView.theme({
             "&": { height: "100%", fontSize: "13px" },
             ".cm-scroller": { overflow: "auto" },
