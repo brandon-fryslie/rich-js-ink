@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "1b140b71edc53e7b7e378e91ea6a559d2845a057",
-      "timestamp": "2026-04-13T05:00:05.378Z",
+      "sha": "8900e0ffc82ad558a918e1c6caaa24113d6e7d60",
+      "timestamp": "2026-04-13T05:28:28.724Z",
       "commits": [
         {
-          "sha": "1b140b71edc53e7b7e378e91ea6a559d2845a057",
+          "sha": "8900e0ffc82ad558a918e1c6caaa24113d6e7d60",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-12T22:59:43-06:00",
-          "message": "fix(site): dedupe Ink to fix StdoutContext mismatch\n\nAlias ink to the site's single copy. Without this, components from\nrich-js-ink use ../node_modules/ink while render() uses\n./node_modules/ink — different context objects cause useWindowSize\nto read the default (process.stdout = undefined) instead of the\nXtermWriteStream provided by render().\n"
+          "timestamp": "2026-04-12T23:28:03-06:00",
+          "message": "feat(site): 3-column live playground with CodeMirror + xterm.js\n\nReplace scrolling gallery with interactive playground layout:\n- Column 1: Component selector sidebar\n- Column 2: CodeMirror 6 editor with JSX, populates on selection\n- Column 3: xterm.js terminal, re-renders live on every edit\n\nUses sucrase for in-browser JSX→JS transformation and eval with\nall rich-js-ink components in scope. 300ms debounced re-render.\n"
         }
       ]
     }
