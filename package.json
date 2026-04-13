@@ -20,7 +20,8 @@
     "test:watch": "vitest",
     "lint": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "demo": "tsc && node dist/demo.js"
+    "demo": "tsc && node dist/demo.js",
+    "build:site": "tsx site/build.tsx"
   },
   "keywords": [
     "terminal",
@@ -43,6 +44,8 @@
   "devDependencies": {
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
+    "ansi-to-html": "^0.7.2",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.2",
     "vitest": "^4.1.4"
   }

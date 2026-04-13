@@ -1,0 +1,35 @@
+name: Deploy Demo Site
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run build:site
+
+      - uses: brandon-fryslie/gh-pages-multiplexer@v1
+        with:
+          source-dir: site/dist
+          base-path-mode: rewrite

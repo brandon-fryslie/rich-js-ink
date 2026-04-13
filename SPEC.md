@@ -441,39 +441,39 @@ The components are grouped by dependency and complexity. Each tier builds on the
 - [x] `<RichTable>`
 - [x] `<RichTree>`
 
-### Tier 2 — Static Renderables
-- [ ] `<RichMarkup>`
-- [ ] `<RichRule>`
-- [ ] `<RichSyntax>`
-- [ ] `<RichMarkdown>`
-- [ ] `<RichJSON>`
-- [ ] `<RichPretty>`
-- [ ] `<RichColumns>`
-- [ ] `<RichTraceback>`
+### Tier 2 — Static Renderables (done)
+- [x] `<RichMarkup>`
+- [x] `<RichRule>`
+- [x] `<RichSyntax>`
+- [x] `<RichMarkdown>`
+- [x] `<RichJSON>`
+- [x] `<RichPretty>`
+- [x] `<RichColumns>`
+- [x] `<RichTraceback>`
 
-### Tier 3 — Wrappers and Context
-- [ ] `<RichAlign>`
-- [ ] `<RichPadding>`
-- [ ] `<RichGroup>`
-- [ ] `<RichLayout>`
-- [ ] `<RichThemeProvider>` + `useRichTheme`
-- [ ] `useRichRenderable`
-- [ ] Re-exports (§7)
+### Tier 3 — Wrappers and Context (done)
+- [x] `<RichAlign>`
+- [x] `<RichPadding>`
+- [x] `<RichGroup>`
+- [x] `<RichLayout>`
+- [x] `<RichThemeProvider>` + `useRichTheme`
+- [x] `useRichRenderable`
+- [x] Re-exports (§7)
 
-### Tier 4 — Animated
-- [ ] `useSpinnerFrame`
-- [ ] `<RichSpinner>`
-- [ ] `<RichProgressBar>`
-- [ ] `<RichStatus>`
+### Tier 4 — Animated (done)
+- [x] `useSpinnerFrame`
+- [x] `<RichSpinner>`
+- [x] `<RichProgressBar>`
+- [x] `<RichStatus>`
 
-### Tier 5 — Multi-Task Progress
-- [ ] `useProgress`
-- [ ] `<RichProgress>`
+### Tier 5 — Multi-Task Progress (done)
+- [x] `useProgress`
+- [x] `<RichProgress>`
 
-### Tier 6 — Interactive
-- [ ] `<RichPrompt>`
-- [ ] `<RichConfirm>`
-- [ ] `<RichSelect>`
+### Tier 6 — Interactive (done)
+- [x] `<RichPrompt>`
+- [x] `<RichConfirm>`
+- [x] `<RichSelect>`
 
 ---
 
