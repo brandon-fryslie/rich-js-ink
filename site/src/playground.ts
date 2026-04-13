@@ -178,6 +178,7 @@ export class Playground {
           javascript({ jsx: true, typescript: true }),
           oneDark,
           updateListener,
+          EditorView.lineWrapping,
           EditorView.theme({
             "&": { height: "100%", fontSize: "13px" },
             ".cm-scroller": { overflow: "auto" },
