@@ -100,6 +100,10 @@ await esbuild.build({
     global: "globalThis",
   },
   alias: {
+    // Dedupe React — prevent multiple copies from file: symlinks
+    react: resolve(__dirname, "node_modules/react"),
+    "react/jsx-runtime": resolve(__dirname, "node_modules/react/jsx-runtime.js"),
+    "react/jsx-dev-runtime": resolve(__dirname, "node_modules/react/jsx-dev-runtime.js"),
     // Bare module polyfills (non-node: prefix)
     events: "events",
     buffer: "buffer",
