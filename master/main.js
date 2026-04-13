@@ -24063,9 +24063,9 @@ var require_stack_utils = __commonJS({
   }
 });
 
-// ../node_modules/react/cjs/react-jsx-runtime.production.js
+// node_modules/react/cjs/react-jsx-runtime.production.js
 var require_react_jsx_runtime_production = __commonJS({
-  "../node_modules/react/cjs/react-jsx-runtime.production.js"(exports) {
+  "node_modules/react/cjs/react-jsx-runtime.production.js"(exports) {
     "use strict";
     init_define_process_argv();
     init_define_process_env();
@@ -24097,9 +24097,9 @@ var require_react_jsx_runtime_production = __commonJS({
   }
 });
 
-// ../node_modules/react/jsx-runtime.js
+// node_modules/react/jsx-runtime.js
 var require_jsx_runtime = __commonJS({
-  "../node_modules/react/jsx-runtime.js"(exports, module) {
+  "node_modules/react/jsx-runtime.js"(exports, module) {
     "use strict";
     init_define_process_argv();
     init_define_process_env();
@@ -24107,467 +24107,6 @@ var require_jsx_runtime = __commonJS({
     init_process_shim_inject();
     if (true) {
       module.exports = require_react_jsx_runtime_production();
-    } else {
-      module.exports = null;
-    }
-  }
-});
-
-// ../node_modules/react/cjs/react.production.js
-var require_react_production2 = __commonJS({
-  "../node_modules/react/cjs/react.production.js"(exports) {
-    "use strict";
-    init_define_process_argv();
-    init_define_process_env();
-    init_define_process_versions();
-    init_process_shim_inject();
-    var REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element");
-    var REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal");
-    var REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment");
-    var REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode");
-    var REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler");
-    var REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer");
-    var REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context");
-    var REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref");
-    var REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense");
-    var REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo");
-    var REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy");
-    var REACT_ACTIVITY_TYPE = /* @__PURE__ */ Symbol.for("react.activity");
-    var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-    function getIteratorFn(maybeIterable) {
-      if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
-      maybeIterable = MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL] || maybeIterable["@@iterator"];
-      return "function" === typeof maybeIterable ? maybeIterable : null;
-    }
-    var ReactNoopUpdateQueue = {
-      isMounted: function() {
-        return false;
-      },
-      enqueueForceUpdate: function() {
-      },
-      enqueueReplaceState: function() {
-      },
-      enqueueSetState: function() {
-      }
-    };
-    var assign = Object.assign;
-    var emptyObject = {};
-    function Component(props, context, updater) {
-      this.props = props;
-      this.context = context;
-      this.refs = emptyObject;
-      this.updater = updater || ReactNoopUpdateQueue;
-    }
-    Component.prototype.isReactComponent = {};
-    Component.prototype.setState = function(partialState, callback) {
-      if ("object" !== typeof partialState && "function" !== typeof partialState && null != partialState)
-        throw Error(
-          "takes an object of state variables to update or a function which returns an object of state variables."
-        );
-      this.updater.enqueueSetState(this, partialState, callback, "setState");
-    };
-    Component.prototype.forceUpdate = function(callback) {
-      this.updater.enqueueForceUpdate(this, callback, "forceUpdate");
-    };
-    function ComponentDummy() {
-    }
-    ComponentDummy.prototype = Component.prototype;
-    function PureComponent3(props, context, updater) {
-      this.props = props;
-      this.context = context;
-      this.refs = emptyObject;
-      this.updater = updater || ReactNoopUpdateQueue;
-    }
-    var pureComponentPrototype = PureComponent3.prototype = new ComponentDummy();
-    pureComponentPrototype.constructor = PureComponent3;
-    assign(pureComponentPrototype, Component.prototype);
-    pureComponentPrototype.isPureReactComponent = true;
-    var isArrayImpl = Array.isArray;
-    function noop2() {
-    }
-    var ReactSharedInternals = { H: null, A: null, T: null, S: null };
-    var hasOwnProperty = Object.prototype.hasOwnProperty;
-    function ReactElement(type, key, props) {
-      var refProp = props.ref;
-      return {
-        $$typeof: REACT_ELEMENT_TYPE,
-        type,
-        key,
-        ref: void 0 !== refProp ? refProp : null,
-        props
-      };
-    }
-    function cloneAndReplaceKey(oldElement, newKey) {
-      return ReactElement(oldElement.type, newKey, oldElement.props);
-    }
-    function isValidElement(object) {
-      return "object" === typeof object && null !== object && object.$$typeof === REACT_ELEMENT_TYPE;
-    }
-    function escape6(key) {
-      var escaperLookup = { "=": "=0", ":": "=2" };
-      return "$" + key.replace(/[=:]/g, function(match) {
-        return escaperLookup[match];
-      });
-    }
-    var userProvidedKeyEscapeRegex = /\/+/g;
-    function getElementKey(element, index) {
-      return "object" === typeof element && null !== element && null != element.key ? escape6("" + element.key) : index.toString(36);
-    }
-    function resolveThenable(thenable) {
-      switch (thenable.status) {
-        case "fulfilled":
-          return thenable.value;
-        case "rejected":
-          throw thenable.reason;
-        default:
-          switch ("string" === typeof thenable.status ? thenable.then(noop2, noop2) : (thenable.status = "pending", thenable.then(
-            function(fulfilledValue) {
-              "pending" === thenable.status && (thenable.status = "fulfilled", thenable.value = fulfilledValue);
-            },
-            function(error) {
-              "pending" === thenable.status && (thenable.status = "rejected", thenable.reason = error);
-            }
-          )), thenable.status) {
-            case "fulfilled":
-              return thenable.value;
-            case "rejected":
-              throw thenable.reason;
-          }
-      }
-      throw thenable;
-    }
-    function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
-      var type = typeof children;
-      if ("undefined" === type || "boolean" === type) children = null;
-      var invokeCallback = false;
-      if (null === children) invokeCallback = true;
-      else
-        switch (type) {
-          case "bigint":
-          case "string":
-          case "number":
-            invokeCallback = true;
-            break;
-          case "object":
-            switch (children.$$typeof) {
-              case REACT_ELEMENT_TYPE:
-              case REACT_PORTAL_TYPE:
-                invokeCallback = true;
-                break;
-              case REACT_LAZY_TYPE:
-                return invokeCallback = children._init, mapIntoArray(
-                  invokeCallback(children._payload),
-                  array,
-                  escapedPrefix,
-                  nameSoFar,
-                  callback
-                );
-            }
-        }
-      if (invokeCallback)
-        return callback = callback(children), invokeCallback = "" === nameSoFar ? "." + getElementKey(children, 0) : nameSoFar, isArrayImpl(callback) ? (escapedPrefix = "", null != invokeCallback && (escapedPrefix = invokeCallback.replace(userProvidedKeyEscapeRegex, "$&/") + "/"), mapIntoArray(callback, array, escapedPrefix, "", function(c) {
-          return c;
-        })) : null != callback && (isValidElement(callback) && (callback = cloneAndReplaceKey(
-          callback,
-          escapedPrefix + (null == callback.key || children && children.key === callback.key ? "" : ("" + callback.key).replace(
-            userProvidedKeyEscapeRegex,
-            "$&/"
-          ) + "/") + invokeCallback
-        )), array.push(callback)), 1;
-      invokeCallback = 0;
-      var nextNamePrefix = "" === nameSoFar ? "." : nameSoFar + ":";
-      if (isArrayImpl(children))
-        for (var i = 0; i < children.length; i++)
-          nameSoFar = children[i], type = nextNamePrefix + getElementKey(nameSoFar, i), invokeCallback += mapIntoArray(
-            nameSoFar,
-            array,
-            escapedPrefix,
-            type,
-            callback
-          );
-      else if (i = getIteratorFn(children), "function" === typeof i)
-        for (children = i.call(children), i = 0; !(nameSoFar = children.next()).done; )
-          nameSoFar = nameSoFar.value, type = nextNamePrefix + getElementKey(nameSoFar, i++), invokeCallback += mapIntoArray(
-            nameSoFar,
-            array,
-            escapedPrefix,
-            type,
-            callback
-          );
-      else if ("object" === type) {
-        if ("function" === typeof children.then)
-          return mapIntoArray(
-            resolveThenable(children),
-            array,
-            escapedPrefix,
-            nameSoFar,
-            callback
-          );
-        array = String(children);
-        throw Error(
-          "Objects are not valid as a React child (found: " + ("[object Object]" === array ? "object with keys {" + Object.keys(children).join(", ") + "}" : array) + "). If you meant to render a collection of children, use an array instead."
-        );
-      }
-      return invokeCallback;
-    }
-    function mapChildren(children, func, context) {
-      if (null == children) return children;
-      var result = [], count = 0;
-      mapIntoArray(children, result, "", "", function(child) {
-        return func.call(context, child, count++);
-      });
-      return result;
-    }
-    function lazyInitializer(payload) {
-      if (-1 === payload._status) {
-        var ctor = payload._result;
-        ctor = ctor();
-        ctor.then(
-          function(moduleObject) {
-            if (0 === payload._status || -1 === payload._status)
-              payload._status = 1, payload._result = moduleObject;
-          },
-          function(error) {
-            if (0 === payload._status || -1 === payload._status)
-              payload._status = 2, payload._result = error;
-          }
-        );
-        -1 === payload._status && (payload._status = 0, payload._result = ctor);
-      }
-      if (1 === payload._status) return payload._result.default;
-      throw payload._result;
-    }
-    var reportGlobalError = "function" === typeof reportError ? reportError : function(error) {
-      if ("object" === typeof window && "function" === typeof window.ErrorEvent) {
-        var event = new window.ErrorEvent("error", {
-          bubbles: true,
-          cancelable: true,
-          message: "object" === typeof error && null !== error && "string" === typeof error.message ? String(error.message) : String(error),
-          error
-        });
-        if (!window.dispatchEvent(event)) return;
-      } else if ("object" === typeof process && "function" === typeof process.emit) {
-        process.emit("uncaughtException", error);
-        return;
-      }
-      console.error(error);
-    };
-    var Children = {
-      map: mapChildren,
-      forEach: function(children, forEachFunc, forEachContext) {
-        mapChildren(
-          children,
-          function() {
-            forEachFunc.apply(this, arguments);
-          },
-          forEachContext
-        );
-      },
-      count: function(children) {
-        var n = 0;
-        mapChildren(children, function() {
-          n++;
-        });
-        return n;
-      },
-      toArray: function(children) {
-        return mapChildren(children, function(child) {
-          return child;
-        }) || [];
-      },
-      only: function(children) {
-        if (!isValidElement(children))
-          throw Error(
-            "React.Children.only expected to receive a single React element child."
-          );
-        return children;
-      }
-    };
-    exports.Activity = REACT_ACTIVITY_TYPE;
-    exports.Children = Children;
-    exports.Component = Component;
-    exports.Fragment = REACT_FRAGMENT_TYPE;
-    exports.Profiler = REACT_PROFILER_TYPE;
-    exports.PureComponent = PureComponent3;
-    exports.StrictMode = REACT_STRICT_MODE_TYPE;
-    exports.Suspense = REACT_SUSPENSE_TYPE;
-    exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE = ReactSharedInternals;
-    exports.__COMPILER_RUNTIME = {
-      __proto__: null,
-      c: function(size) {
-        return ReactSharedInternals.H.useMemoCache(size);
-      }
-    };
-    exports.cache = function(fn) {
-      return function() {
-        return fn.apply(null, arguments);
-      };
-    };
-    exports.cacheSignal = function() {
-      return null;
-    };
-    exports.cloneElement = function(element, config, children) {
-      if (null === element || void 0 === element)
-        throw Error(
-          "The argument must be a React element, but you passed " + element + "."
-        );
-      var props = assign({}, element.props), key = element.key;
-      if (null != config)
-        for (propName in void 0 !== config.key && (key = "" + config.key), config)
-          !hasOwnProperty.call(config, propName) || "key" === propName || "__self" === propName || "__source" === propName || "ref" === propName && void 0 === config.ref || (props[propName] = config[propName]);
-      var propName = arguments.length - 2;
-      if (1 === propName) props.children = children;
-      else if (1 < propName) {
-        for (var childArray = Array(propName), i = 0; i < propName; i++)
-          childArray[i] = arguments[i + 2];
-        props.children = childArray;
-      }
-      return ReactElement(element.type, key, props);
-    };
-    exports.createContext = function(defaultValue) {
-      defaultValue = {
-        $$typeof: REACT_CONTEXT_TYPE,
-        _currentValue: defaultValue,
-        _currentValue2: defaultValue,
-        _threadCount: 0,
-        Provider: null,
-        Consumer: null
-      };
-      defaultValue.Provider = defaultValue;
-      defaultValue.Consumer = {
-        $$typeof: REACT_CONSUMER_TYPE,
-        _context: defaultValue
-      };
-      return defaultValue;
-    };
-    exports.createElement = function(type, config, children) {
-      var propName, props = {}, key = null;
-      if (null != config)
-        for (propName in void 0 !== config.key && (key = "" + config.key), config)
-          hasOwnProperty.call(config, propName) && "key" !== propName && "__self" !== propName && "__source" !== propName && (props[propName] = config[propName]);
-      var childrenLength = arguments.length - 2;
-      if (1 === childrenLength) props.children = children;
-      else if (1 < childrenLength) {
-        for (var childArray = Array(childrenLength), i = 0; i < childrenLength; i++)
-          childArray[i] = arguments[i + 2];
-        props.children = childArray;
-      }
-      if (type && type.defaultProps)
-        for (propName in childrenLength = type.defaultProps, childrenLength)
-          void 0 === props[propName] && (props[propName] = childrenLength[propName]);
-      return ReactElement(type, key, props);
-    };
-    exports.createRef = function() {
-      return { current: null };
-    };
-    exports.forwardRef = function(render3) {
-      return { $$typeof: REACT_FORWARD_REF_TYPE, render: render3 };
-    };
-    exports.isValidElement = isValidElement;
-    exports.lazy = function(ctor) {
-      return {
-        $$typeof: REACT_LAZY_TYPE,
-        _payload: { _status: -1, _result: ctor },
-        _init: lazyInitializer
-      };
-    };
-    exports.memo = function(type, compare) {
-      return {
-        $$typeof: REACT_MEMO_TYPE,
-        type,
-        compare: void 0 === compare ? null : compare
-      };
-    };
-    exports.startTransition = function(scope) {
-      var prevTransition = ReactSharedInternals.T, currentTransition = {};
-      ReactSharedInternals.T = currentTransition;
-      try {
-        var returnValue = scope(), onStartTransitionFinish = ReactSharedInternals.S;
-        null !== onStartTransitionFinish && onStartTransitionFinish(currentTransition, returnValue);
-        "object" === typeof returnValue && null !== returnValue && "function" === typeof returnValue.then && returnValue.then(noop2, reportGlobalError);
-      } catch (error) {
-        reportGlobalError(error);
-      } finally {
-        null !== prevTransition && null !== currentTransition.types && (prevTransition.types = currentTransition.types), ReactSharedInternals.T = prevTransition;
-      }
-    };
-    exports.unstable_useCacheRefresh = function() {
-      return ReactSharedInternals.H.useCacheRefresh();
-    };
-    exports.use = function(usable) {
-      return ReactSharedInternals.H.use(usable);
-    };
-    exports.useActionState = function(action, initialState, permalink) {
-      return ReactSharedInternals.H.useActionState(action, initialState, permalink);
-    };
-    exports.useCallback = function(callback, deps) {
-      return ReactSharedInternals.H.useCallback(callback, deps);
-    };
-    exports.useContext = function(Context) {
-      return ReactSharedInternals.H.useContext(Context);
-    };
-    exports.useDebugValue = function() {
-    };
-    exports.useDeferredValue = function(value, initialValue) {
-      return ReactSharedInternals.H.useDeferredValue(value, initialValue);
-    };
-    exports.useEffect = function(create4, deps) {
-      return ReactSharedInternals.H.useEffect(create4, deps);
-    };
-    exports.useEffectEvent = function(callback) {
-      return ReactSharedInternals.H.useEffectEvent(callback);
-    };
-    exports.useId = function() {
-      return ReactSharedInternals.H.useId();
-    };
-    exports.useImperativeHandle = function(ref, create4, deps) {
-      return ReactSharedInternals.H.useImperativeHandle(ref, create4, deps);
-    };
-    exports.useInsertionEffect = function(create4, deps) {
-      return ReactSharedInternals.H.useInsertionEffect(create4, deps);
-    };
-    exports.useLayoutEffect = function(create4, deps) {
-      return ReactSharedInternals.H.useLayoutEffect(create4, deps);
-    };
-    exports.useMemo = function(create4, deps) {
-      return ReactSharedInternals.H.useMemo(create4, deps);
-    };
-    exports.useOptimistic = function(passthrough, reducer) {
-      return ReactSharedInternals.H.useOptimistic(passthrough, reducer);
-    };
-    exports.useReducer = function(reducer, initialArg, init) {
-      return ReactSharedInternals.H.useReducer(reducer, initialArg, init);
-    };
-    exports.useRef = function(initialValue) {
-      return ReactSharedInternals.H.useRef(initialValue);
-    };
-    exports.useState = function(initialState) {
-      return ReactSharedInternals.H.useState(initialState);
-    };
-    exports.useSyncExternalStore = function(subscribe, getSnapshot, getServerSnapshot) {
-      return ReactSharedInternals.H.useSyncExternalStore(
-        subscribe,
-        getSnapshot,
-        getServerSnapshot
-      );
-    };
-    exports.useTransition = function() {
-      return ReactSharedInternals.H.useTransition();
-    };
-    exports.version = "19.2.5";
-  }
-});
-
-// ../node_modules/react/index.js
-var require_react2 = __commonJS({
-  "../node_modules/react/index.js"(exports, module) {
-    "use strict";
-    init_define_process_argv();
-    init_define_process_env();
-    init_define_process_versions();
-    init_process_shim_inject();
-    if (true) {
-      module.exports = require_react_production2();
     } else {
       module.exports = null;
     }
@@ -32501,7 +32040,7 @@ var require_react_reconciler_production2 = __commonJS({
       }
       var exports2 = {};
       "use strict";
-      var React23 = require_react2(), Scheduler3 = require_scheduler2(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.element"), REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy");
+      var React23 = require_react(), Scheduler3 = require_scheduler2(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.element"), REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy");
       /* @__PURE__ */ Symbol.for("react.scope");
       var REACT_ACTIVITY_TYPE = /* @__PURE__ */ Symbol.for("react.activity");
       /* @__PURE__ */ Symbol.for("react.legacy_hidden");
@@ -33759,56 +33298,6 @@ var require_stack_utils2 = __commonJS({
     );
     var methodRe = /^(.*?) \[as (.*?)\]$/;
     module.exports = StackUtils3;
-  }
-});
-
-// node_modules/react/cjs/react-jsx-runtime.production.js
-var require_react_jsx_runtime_production2 = __commonJS({
-  "node_modules/react/cjs/react-jsx-runtime.production.js"(exports) {
-    "use strict";
-    init_define_process_argv();
-    init_define_process_env();
-    init_define_process_versions();
-    init_process_shim_inject();
-    var REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element");
-    var REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment");
-    function jsxProd(type, config, maybeKey) {
-      var key = null;
-      void 0 !== maybeKey && (key = "" + maybeKey);
-      void 0 !== config.key && (key = "" + config.key);
-      if ("key" in config) {
-        maybeKey = {};
-        for (var propName in config)
-          "key" !== propName && (maybeKey[propName] = config[propName]);
-      } else maybeKey = config;
-      config = maybeKey.ref;
-      return {
-        $$typeof: REACT_ELEMENT_TYPE,
-        type,
-        key,
-        ref: void 0 !== config ? config : null,
-        props: maybeKey
-      };
-    }
-    exports.Fragment = REACT_FRAGMENT_TYPE;
-    exports.jsx = jsxProd;
-    exports.jsxs = jsxProd;
-  }
-});
-
-// node_modules/react/jsx-runtime.js
-var require_jsx_runtime2 = __commonJS({
-  "node_modules/react/jsx-runtime.js"(exports, module) {
-    "use strict";
-    init_define_process_argv();
-    init_define_process_env();
-    init_define_process_versions();
-    init_process_shim_inject();
-    if (true) {
-      module.exports = require_react_jsx_runtime_production2();
-    } else {
-      module.exports = null;
-    }
   }
 });
 
@@ -48008,7 +47497,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
-var import_react67 = __toESM(require_react2(), 1);
+var import_react67 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/index.js
 init_define_process_argv();
@@ -48028,7 +47517,7 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react49 = __toESM(require_react2(), 1);
+var import_react49 = __toESM(require_react(), 1);
 
 // ../node_modules/auto-bind/index.js
 init_define_process_argv();
@@ -50502,7 +49991,7 @@ init_process_shim_inject();
 var import_react_reconciler2 = __toESM(require_react_reconciler2(), 1);
 var import_constants4 = __toESM(require_constants2(), 1);
 var Scheduler2 = __toESM(require_scheduler2(), 1);
-var import_react34 = __toESM(require_react2(), 1);
+var import_react34 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/dom.js
 init_define_process_argv();
@@ -53304,7 +52793,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_node_events4 = __toESM(require_events(), 1);
-var import_react48 = __toESM(require_react2(), 1);
+var import_react48 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/input-parser.js
 init_define_process_argv();
@@ -53500,7 +52989,7 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react35 = __toESM(require_react2(), 1);
+var import_react35 = __toESM(require_react(), 1);
 var AppContext2 = (0, import_react35.createContext)({
   exit() {
   },
@@ -53516,7 +53005,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_node_events3 = __toESM(require_events(), 1);
-var import_react36 = __toESM(require_react2(), 1);
+var import_react36 = __toESM(require_react(), 1);
 var StdinContext2 = (0, import_react36.createContext)({
   stdin: process_shim_default.stdin,
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -53537,7 +53026,7 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react37 = __toESM(require_react2(), 1);
+var import_react37 = __toESM(require_react(), 1);
 var StdoutContext2 = (0, import_react37.createContext)({
   stdout: process_shim_default.stdout,
   write() {
@@ -53551,7 +53040,7 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react38 = __toESM(require_react2(), 1);
+var import_react38 = __toESM(require_react(), 1);
 var StderrContext2 = (0, import_react38.createContext)({
   stderr: process_shim_default.stderr,
   write() {
@@ -53565,7 +53054,7 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react39 = __toESM(require_react2(), 1);
+var import_react39 = __toESM(require_react(), 1);
 var FocusContext2 = (0, import_react39.createContext)({
   activeId: void 0,
   add() {
@@ -53595,7 +53084,7 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react40 = __toESM(require_react2(), 1);
+var import_react40 = __toESM(require_react(), 1);
 var animationContext2 = (0, import_react40.createContext)({
   renderThrottleMs: 0,
   subscribe() {
@@ -53614,7 +53103,7 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react41 = __toESM(require_react2(), 1);
+var import_react41 = __toESM(require_react(), 1);
 var CursorContext2 = (0, import_react41.createContext)({
   setCursorPosition() {
   }
@@ -53627,7 +53116,7 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react47 = __toESM(require_react2(), 1);
+var import_react47 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/components/ErrorOverview.js
 init_define_process_argv();
@@ -53635,7 +53124,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 init_fs();
-var import_react46 = __toESM(require_react2(), 1);
+var import_react46 = __toESM(require_react(), 1);
 var import_stack_utils2 = __toESM(require_stack_utils2(), 1);
 
 // ../node_modules/code-excerpt/dist/index.js
@@ -53685,14 +53174,14 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react44 = __toESM(require_react2(), 1);
+var import_react44 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/components/AccessibilityContext.js
 init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react42 = __toESM(require_react2(), 1);
+var import_react42 = __toESM(require_react(), 1);
 var accessibilityContext2 = (0, import_react42.createContext)({
   isScreenReaderEnabled: false
 });
@@ -53702,7 +53191,7 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react43 = __toESM(require_react2(), 1);
+var import_react43 = __toESM(require_react(), 1);
 var backgroundContext2 = (0, import_react43.createContext)(void 0);
 
 // ../node_modules/ink/build/components/Box.js
@@ -53738,7 +53227,7 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react45 = __toESM(require_react2(), 1);
+var import_react45 = __toESM(require_react(), 1);
 function Text3({ color, backgroundColor, dimColor = false, bold = false, italic = false, underline = false, strikethrough = false, inverse = false, wrap = "wrap", children, "aria-label": ariaLabel, "aria-hidden": ariaHidden = false }) {
   const { isScreenReaderEnabled } = (0, import_react45.useContext)(accessibilityContext2);
   const inheritedBackgroundColor = (0, import_react45.useContext)(backgroundContext2);
@@ -54371,35 +53860,35 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react50 = __toESM(require_react2(), 1);
+var import_react50 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/components/Transform.js
 init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react51 = __toESM(require_react2(), 1);
+var import_react51 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/components/Newline.js
 init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react52 = __toESM(require_react2(), 1);
+var import_react52 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/components/Spacer.js
 init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react53 = __toESM(require_react2(), 1);
+var import_react53 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/hooks/use-input.js
 init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react55 = __toESM(require_react2(), 1);
+var import_react55 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/parse-keypress.js
 init_define_process_argv();
@@ -54500,28 +53989,28 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react54 = __toESM(require_react2(), 1);
+var import_react54 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/hooks/use-paste.js
 init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react56 = __toESM(require_react2(), 1);
+var import_react56 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/hooks/use-app.js
 init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react57 = __toESM(require_react2(), 1);
+var import_react57 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/hooks/use-stdout.js
 init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react58 = __toESM(require_react2(), 1);
+var import_react58 = __toESM(require_react(), 1);
 var useStdout = () => (0, import_react58.useContext)(StdoutContext_default2);
 var use_stdout_default2 = useStdout;
 
@@ -54530,42 +54019,42 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react59 = __toESM(require_react2(), 1);
+var import_react59 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/hooks/use-focus.js
 init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react60 = __toESM(require_react2(), 1);
+var import_react60 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/hooks/use-focus-manager.js
 init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react61 = __toESM(require_react2(), 1);
+var import_react61 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/hooks/use-is-screen-reader-enabled.js
 init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react62 = __toESM(require_react2(), 1);
+var import_react62 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/hooks/use-cursor.js
 init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react63 = __toESM(require_react2(), 1);
+var import_react63 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/hooks/use-animation.js
 init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react64 = __toESM(require_react2(), 1);
+var import_react64 = __toESM(require_react(), 1);
 var defaultAnimationInterval = 100;
 var maximumTimerInterval = 2147483647;
 var zeroAnimState = { frame: 0, time: 0, delta: 0 };
@@ -54629,7 +54118,7 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react65 = __toESM(require_react2(), 1);
+var import_react65 = __toESM(require_react(), 1);
 var useWindowSize = () => {
   const { stdout: stdout2 } = use_stdout_default2();
   const [size, setSize] = (0, import_react65.useState)(() => getWindowSize2(stdout2));
@@ -54651,7 +54140,7 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react66 = __toESM(require_react2(), 1);
+var import_react66 = __toESM(require_react(), 1);
 
 // ../node_modules/ink/build/measure-element.js
 init_define_process_argv();
@@ -54665,7 +54154,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
-var import_react68 = __toESM(require_react2(), 1);
+var import_react68 = __toESM(require_react(), 1);
 function RichPanel({ children, width, ...panelOptions }) {
   const windowSize = use_window_size_default2();
   const effectiveWidth = width ?? windowSize.columns;
@@ -54683,7 +54172,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
-var import_react69 = __toESM(require_react2(), 1);
+var import_react69 = __toESM(require_react(), 1);
 function RichTable({ columns: columnDefs, rows, width, ...tableOptions }) {
   const windowSize = use_window_size_default2();
   const effectiveWidth = width ?? windowSize.columns;
@@ -54706,7 +54195,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
-var import_react70 = __toESM(require_react2(), 1);
+var import_react70 = __toESM(require_react(), 1);
 function addChildren(tree, children) {
   for (const child of children) {
     const childTree = tree.add(child.label);
@@ -54736,7 +54225,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
-var import_react71 = __toESM(require_react2(), 1);
+var import_react71 = __toESM(require_react(), 1);
 function RichMarkup({ children, width }) {
   const windowSize = use_window_size_default2();
   const effectiveWidth = width ?? windowSize.columns;
@@ -54753,7 +54242,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
-var import_react72 = __toESM(require_react2(), 1);
+var import_react72 = __toESM(require_react(), 1);
 function RichRule({ title, width, ...ruleOptions }) {
   const windowSize = use_window_size_default2();
   const effectiveWidth = width ?? windowSize.columns;
@@ -54770,7 +54259,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
-var import_react73 = __toESM(require_react2(), 1);
+var import_react73 = __toESM(require_react(), 1);
 function RichSyntax({ children, language, width, ...syntaxOptions }) {
   const windowSize = use_window_size_default2();
   const effectiveWidth = width ?? windowSize.columns;
@@ -54787,7 +54276,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime8 = __toESM(require_jsx_runtime(), 1);
-var import_react74 = __toESM(require_react2(), 1);
+var import_react74 = __toESM(require_react(), 1);
 function RichMarkdown({ children, width, ...markdownOptions }) {
   const windowSize = use_window_size_default2();
   const effectiveWidth = width ?? windowSize.columns;
@@ -54804,7 +54293,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime9 = __toESM(require_jsx_runtime(), 1);
-var import_react75 = __toESM(require_react2(), 1);
+var import_react75 = __toESM(require_react(), 1);
 function RichJSON({ data, width, ...jsonOptions }) {
   const windowSize = use_window_size_default2();
   const effectiveWidth = width ?? windowSize.columns;
@@ -54821,7 +54310,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime10 = __toESM(require_jsx_runtime(), 1);
-var import_react76 = __toESM(require_react2(), 1);
+var import_react76 = __toESM(require_react(), 1);
 function RichPretty({ data, width, ...prettyOptions }) {
   const windowSize = use_window_size_default2();
   const effectiveWidth = width ?? windowSize.columns;
@@ -54838,7 +54327,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime11 = __toESM(require_jsx_runtime(), 1);
-var import_react77 = __toESM(require_react2(), 1);
+var import_react77 = __toESM(require_react(), 1);
 function RichColumns({ items, width, ...columnsOptions }) {
   const windowSize = use_window_size_default2();
   const effectiveWidth = width ?? windowSize.columns;
@@ -54855,7 +54344,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime12 = __toESM(require_jsx_runtime(), 1);
-var import_react78 = __toESM(require_react2(), 1);
+var import_react78 = __toESM(require_react(), 1);
 
 // ../dist/hooks/useRichTheme.js
 init_define_process_argv();
@@ -54863,7 +54352,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime13 = __toESM(require_jsx_runtime(), 1);
-var import_react79 = __toESM(require_react2(), 1);
+var import_react79 = __toESM(require_react(), 1);
 var RichThemeContext = (0, import_react79.createContext)({
   colorSystem: ColorSystem.TRUECOLOR,
   theme: void 0
@@ -54881,7 +54370,7 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react80 = __toESM(require_react2(), 1);
+var import_react80 = __toESM(require_react(), 1);
 
 // ../dist/hooks/useSpinnerFrame.js
 init_define_process_argv();
@@ -54920,7 +54409,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime15 = __toESM(require_jsx_runtime(), 1);
-var import_react81 = __toESM(require_react2(), 1);
+var import_react81 = __toESM(require_react(), 1);
 function RichProgressBar({ width, ...barOptions }) {
   const windowSize = use_window_size_default2();
   const effectiveWidth = width ?? windowSize.columns;
@@ -54950,7 +54439,7 @@ init_define_process_argv();
 init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
-var import_react82 = __toESM(require_react2(), 1);
+var import_react82 = __toESM(require_react(), 1);
 function useProgress() {
   const [tasks, setTasks] = (0, import_react82.useState)([]);
   const nextIdRef = (0, import_react82.useRef)(1);
@@ -54999,7 +54488,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime17 = __toESM(require_jsx_runtime(), 1);
-var import_react83 = __toESM(require_react2(), 1);
+var import_react83 = __toESM(require_react(), 1);
 function formatTime(seconds) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor(seconds % 3600 / 60);
@@ -55083,7 +54572,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime18 = __toESM(require_jsx_runtime(), 1);
-var import_react84 = __toESM(require_react2(), 1);
+var import_react84 = __toESM(require_react(), 1);
 
 // ../dist/components/RichConfirm.js
 init_define_process_argv();
@@ -55091,7 +54580,7 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime19 = __toESM(require_jsx_runtime(), 1);
-var import_react85 = __toESM(require_react2(), 1);
+var import_react85 = __toESM(require_react(), 1);
 
 // ../dist/components/RichSelect.js
 init_define_process_argv();
@@ -55099,10 +54588,10 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime20 = __toESM(require_jsx_runtime(), 1);
-var import_react86 = __toESM(require_react2(), 1);
+var import_react86 = __toESM(require_react(), 1);
 
 // src/demos.tsx
-var import_jsx_runtime21 = __toESM(require_jsx_runtime2(), 1);
+var import_jsx_runtime21 = __toESM(require_jsx_runtime(), 1);
 function PanelDemo() {
   return /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(RichThemeProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(RichPanel, { title: "Hello", box: ROUNDED, style: "cyan", children: "This is a [bold magenta]rich-js[/] Panel\nrendered inside Ink!" }) });
 }
@@ -55542,7 +55031,6 @@ safe-buffer/index.js:
   (*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> *)
 
 react/cjs/react.production.js:
-react/cjs/react.production.js:
   (**
    * @license React
    * react.production.js
@@ -55589,7 +55077,6 @@ react-reconciler/cjs/react-reconciler.production.js:
    * LICENSE file in the root directory of this source tree.
    *)
 
-react/cjs/react-jsx-runtime.production.js:
 react/cjs/react-jsx-runtime.production.js:
   (**
    * @license React
