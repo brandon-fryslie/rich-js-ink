@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "a40f952d8b4e819e30bbcdf3df97b2b18ba37541",
-      "timestamp": "2026-04-13T04:49:37.711Z",
+      "sha": "1b140b71edc53e7b7e378e91ea6a559d2845a057",
+      "timestamp": "2026-04-13T05:00:05.378Z",
       "commits": [
         {
-          "sha": "a40f952d8b4e819e30bbcdf3df97b2b18ba37541",
+          "sha": "1b140b71edc53e7b7e378e91ea6a559d2845a057",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-12T22:49:09-06:00",
-          "message": "fix(site): dedupe React to fix hooks crash\n\nAlias react and react/jsx-runtime to the site's single copy,\npreventing file: symlinks from bundling duplicate React instances\nwhich causes ReactSharedInternals.H.useState to be null.\n"
+          "timestamp": "2026-04-12T22:59:43-06:00",
+          "message": "fix(site): dedupe Ink to fix StdoutContext mismatch\n\nAlias ink to the site's single copy. Without this, components from\nrich-js-ink use ../node_modules/ink while render() uses\n./node_modules/ink — different context objects cause useWindowSize\nto read the default (process.stdout = undefined) instead of the\nXtermWriteStream provided by render().\n"
         }
       ]
     }
