@@ -87379,7 +87379,8 @@ var Playground = class {
       cursorBlink: false,
       cursorStyle: "bar",
       cursorInactiveStyle: "none",
-      disableStdin: true,
+      disableStdin: false,
+      convertEol: true,
       fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', Consolas, monospace",
       fontSize: 13,
       lineHeight: 1.2,
@@ -87446,6 +87447,7 @@ var Playground = class {
       this.currentInk = null;
     }
     this.terminal?.reset();
+    this.terminal?.write("\x1B[?25l");
     this.errorEl.textContent = "";
     this.errorEl.style.display = "none";
     try {
