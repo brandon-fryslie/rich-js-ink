@@ -281,6 +281,7 @@ export class Playground {
         stderr,
         exitOnCtrlC: false,
         patchConsole: false,
+        interactive: true,
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
