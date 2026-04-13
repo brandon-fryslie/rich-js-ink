@@ -20,10 +20,6 @@ import { RichJSON } from "../RichJSON.js";
 import { RichPretty } from "../RichPretty.js";
 import { RichColumns } from "../RichColumns.js";
 import { RichTraceback } from "../RichTraceback.js";
-import { RichAlign } from "../RichAlign.js";
-import { RichPadding } from "../RichPadding.js";
-import { RichGroup } from "../RichGroup.js";
-import { RichLayout } from "../RichLayout.js";
 import { RichText, ROUNDED, DOUBLE } from "rich-js";
 
 const COLS = 60;
@@ -198,58 +194,3 @@ describe("RichTraceback", () => {
   });
 });
 
-// --- Tier 3 ---
-
-describe("RichAlign", () => {
-  it("renders aligned content", () => {
-    const text = new RichText("centered", { end: "" });
-    const output = render(
-      <RichAlign align="center" width={COLS}>{text}</RichAlign>,
-    );
-    expect(output).toContain("centered");
-    // Centered text should have leading spaces
-    const line = output.split("\n")[0]!;
-    expect(line.startsWith(" ")).toBe(true);
-  });
-});
-
-describe("RichPadding", () => {
-  it("renders padded content", () => {
-    const text = new RichText("padded", { end: "" });
-    const output = render(
-      <RichPadding padding={[0, 2]} width={COLS}>{text}</RichPadding>,
-    );
-    expect(output).toContain("padded");
-  });
-});
-
-describe("RichGroup", () => {
-  it("renders multiple renderables in sequence", () => {
-    const a = new RichText("first\n", { end: "" });
-    const b = new RichText("second\n", { end: "" });
-    const output = render(
-      <RichGroup width={COLS}>{[a, b]}</RichGroup>,
-    );
-    expect(output).toContain("first");
-    expect(output).toContain("second");
-    // Order preserved
-    expect(output.indexOf("first")).toBeLessThan(output.indexOf("second"));
-  });
-});
-
-describe("RichLayout", () => {
-  it("renders row splits side by side", () => {
-    const output = render(
-      <RichLayout
-        direction="row"
-        splits={[
-          { content: "LEFT", ratio: 1 },
-          { content: "RIGHT", ratio: 1 },
-        ]}
-        width={COLS}
-      />,
-    );
-    expect(output).toContain("LEFT");
-    expect(output).toContain("RIGHT");
-  });
-});

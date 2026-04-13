@@ -42,19 +42,7 @@ export type { RichColumnsProps } from "./components/RichColumns.js";
 export { RichTraceback } from "./components/RichTraceback.js";
 export type { RichTracebackProps } from "./components/RichTraceback.js";
 
-// --- Tier 3: Wrappers and Context ---
-
-export { RichAlign } from "./components/RichAlign.js";
-export type { RichAlignProps } from "./components/RichAlign.js";
-
-export { RichPadding } from "./components/RichPadding.js";
-export type { RichPaddingProps } from "./components/RichPadding.js";
-
-export { RichGroup } from "./components/RichGroup.js";
-export type { RichGroupProps } from "./components/RichGroup.js";
-
-export { RichLayout } from "./components/RichLayout.js";
-export type { RichLayoutProps, SplitDef } from "./components/RichLayout.js";
+// --- Tier 3: Context and Hooks ---
 
 export { RichThemeProvider, useRichTheme } from "./hooks/useRichTheme.js";
 export type {

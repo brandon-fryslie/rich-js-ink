@@ -220,60 +220,6 @@ Props: extends `TracebackOptions` + `error: Error`, `width?`
 
 ---
 
-### Wrappers
-
-#### `<RichAlign>`
-
-Horizontal alignment wrapper.
-
-```tsx
-<RichAlign align="center">
-  {someRenderable}
-</RichAlign>
-```
-
-Props: `align: "left" | "center" | "right"`, `children: Renderable`, `width?`
-
-#### `<RichPadding>`
-
-Padding wrapper.
-
-```tsx
-<RichPadding padding={[1, 2]}>
-  {someRenderable}
-</RichPadding>
-```
-
-Props: `padding: PaddingDimensions`, `style?`, `expand?`, `children: Renderable`, `width?`
-
-#### `<RichGroup>`
-
-Sequential rendering of multiple renderables.
-
-```tsx
-<RichGroup>{[panel, table, rule]}</RichGroup>
-```
-
-Props: `children: Renderable[]`, `width?`
-
-#### `<RichLayout>`
-
-Split-pane layout (horizontal/vertical regions).
-
-```tsx
-<RichLayout
-  direction="row"
-  splits={[
-    { name: "left", ratio: 1, content: leftRenderable },
-    { name: "right", ratio: 2, content: rightRenderable },
-  ]}
-/>
-```
-
-Props: `direction: "row" | "column"`, `splits: SplitDef[]`, `width?`, `height?`
-
----
-
 ### Animated Components
 
 #### `<RichSpinner>`
@@ -435,7 +381,7 @@ The components fall into three bridge patterns:
 
 | Pattern | Components | rich-js role | Ink role |
 |---------|-----------|-------------|---------|
-| **Static bridge** | Panel, Table, Tree, Rule, Syntax, Markdown, JSON, Pretty, Columns, Traceback, Align, Padding, Group, Layout | Constructs renderable, renders segments, serializes to ANSI | Layout, React lifecycle |
+| **Static bridge** | Panel, Table, Tree, Rule, Syntax, Markdown, JSON, Pretty, Columns, Traceback | Constructs renderable, renders segments, serializes to ANSI | Layout, React lifecycle |
 | **Animation bridge** | Spinner, ProgressBar, Status, Progress | Frame data (`SPINNERS`), bar rendering (`ProgressBar`) | Timing (`useAnimation`), state |
 | **Input bridge** | Prompt, Confirm, Select | Styling (`Style.parse().render()`) | Input (`useInput`), layout |
 
@@ -444,6 +390,7 @@ The components fall into three bridge patterns:
 - **`Live`** — Ink's React reconciler IS the live rendering system
 - **`Console`** — Would bypass Ink's rendering and corrupt the display
 - **`Constrain`** — Exposed as `width?` prop on every component instead
+- **`Align`, `Padding`, `Group`, `Layout`** — Ink owns layout via Yoga flexbox. Wrapping these would produce double-layout bugs (rich-js bakes spacing into the string as literal characters, then Yoga applies its own spacing around it). Use Ink's `<Box>` instead — see the [migration guide](SPEC.md#8-coming-from-python-rich--layout-migration-guide)
 
 ## License
 

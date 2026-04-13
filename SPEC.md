@@ -179,60 +179,6 @@ Formatted error traceback.
 
 Props mirror `TracebackOptions` + `error: Error`, `width?`
 
-### 2.11 `<RichLayout>`
-
-Split-pane layout (horizontal/vertical regions).
-
-```tsx
-<RichLayout
-  direction="row"
-  splits={[
-    { name: "left", ratio: 1, content: leftRenderable },
-    { name: "right", ratio: 2, content: rightRenderable },
-  ]}
-/>
-```
-
-Props: `direction: "row" | "column"`, `splits: SplitDef[]`, `width?`, `height?`
-
-Where `SplitDef = { name?: string, ratio?: number, size?: number, content: string | Renderable }`
-
-### 2.12 `<RichAlign>`
-
-Horizontal alignment wrapper.
-
-```tsx
-<RichAlign align="center">
-  <RichPanel>{"centered content"}</RichPanel>
-</RichAlign>
-```
-
-Props: `align: "left" | "center" | "right"`, `children: Renderable`, `width?`
-
-### 2.13 `<RichPadding>`
-
-Padding wrapper.
-
-```tsx
-<RichPadding padding={[1, 2]}>
-  <RichPanel>{"padded"}</RichPanel>
-</RichPadding>
-```
-
-Props: `padding: PaddingDimensions`, `style?`, `expand?`, `children: Renderable`, `width?`
-
-### 2.14 `<RichGroup>`
-
-Sequential rendering of multiple renderables (no visual chrome).
-
-```tsx
-<RichGroup>
-  {[panelRenderable, tableRenderable, ruleRenderable]}
-</RichGroup>
-```
-
-Props: `children: Renderable[]`, `width?`
-
 ---
 
 ## 3. Animated Components
@@ -451,11 +397,7 @@ The components are grouped by dependency and complexity. Each tier builds on the
 - [x] `<RichColumns>`
 - [x] `<RichTraceback>`
 
-### Tier 3 — Wrappers and Context (done)
-- [x] `<RichAlign>`
-- [x] `<RichPadding>`
-- [x] `<RichGroup>`
-- [x] `<RichLayout>`
+### Tier 3 — Context and Hooks (done)
 - [x] `<RichThemeProvider>` + `useRichTheme`
 - [x] `useRichRenderable`
 - [x] Re-exports (§7)
@@ -484,3 +426,216 @@ The components are grouped by dependency and complexity. Each tier builds on the
 **`<RichConsole>`** — Not implemented. The `Console` class is rich-js's orchestrator for imperative stdout writing. In Ink, React owns the render loop. Using Console would bypass Ink's rendering entirely and corrupt the display.
 
 **`Constrain`** — Not exposed as a standalone component. Width constraining is a prop (`width?`) on every component, which is more idiomatic in React than a wrapper component. The underlying `Constrain` class is used internally when needed.
+
+**`<RichAlign>`, `<RichPadding>`, `<RichGroup>`, `<RichLayout>`** — Not implemented. These are layout primitives, and Ink already owns layout via Yoga flexbox. Wrapping them would produce double-layout bugs (rich-js bakes spacing into the string as literal characters, then Ink's Yoga applies its own spacing around it). See §8 for how to achieve the same results with Ink's `<Box>`.
+
+---
+
+## 8. Coming from Python Rich — Layout Migration Guide
+
+Rich (Python) has no layout engine — it builds layout by calculating character positions and padding strings with spaces. In rich-js-ink, Ink provides a real layout engine (Yoga flexbox). Several Rich concepts map directly to Ink's `<Box>` component rather than to rich-js-ink components.
+
+### Align → `<Box>`
+
+Python Rich:
+```python
+from rich.align import Align
+console.print(Align.center(panel))
+console.print(Align.right("hello"))
+```
+
+rich-js-ink:
+```tsx
+// Center a component
+<Box justifyContent="center">
+  <RichPanel>{"content"}</RichPanel>
+</Box>
+
+// Right-align text
+<Box justifyContent="flex-end">
+  <Text>hello</Text>
+</Box>
+
+// Vertical centering (Rich can't do this — Ink can)
+<Box alignItems="center" height={10}>
+  <RichPanel>{"vertically centered"}</RichPanel>
+</Box>
+```
+
+| Rich `Align` | Ink `<Box>` |
+|---|---|
+| `Align.left(x)` | `<Box justifyContent="flex-start">{x}</Box>` |
+| `Align.center(x)` | `<Box justifyContent="center">{x}</Box>` |
+| `Align.right(x)` | `<Box justifyContent="flex-end">{x}</Box>` |
+
+### Padding → `<Box>`
+
+Python Rich:
+```python
+from rich.padding import Padding
+console.print(Padding(panel, (1, 2)))       # top/bottom=1, left/right=2
+console.print(Padding(panel, (1, 2, 3, 4))) # top=1, right=2, bottom=3, left=4
+```
+
+rich-js-ink:
+```tsx
+// Symmetric padding
+<Box paddingY={1} paddingX={2}>
+  <RichPanel>{"content"}</RichPanel>
+</Box>
+
+// Per-side padding
+<Box paddingTop={1} paddingRight={2} paddingBottom={3} paddingLeft={4}>
+  <RichPanel>{"content"}</RichPanel>
+</Box>
+```
+
+| Rich `Padding` tuple | Ink `<Box>` props |
+|---|---|
+| `(n,)` or `n` | `padding={n}` |
+| `(y, x)` | `paddingY={y} paddingX={x}` |
+| `(top, right, bottom, left)` | `paddingTop paddingRight paddingBottom paddingLeft` |
+
+### Group → JSX children
+
+Python Rich:
+```python
+from rich.console import Group
+console.print(Group(panel, table, rule))
+```
+
+rich-js-ink:
+```tsx
+// Just use children — this is React
+<Box flexDirection="column">
+  <RichPanel>{"content"}</RichPanel>
+  <RichTable columns={cols} rows={rows} />
+  <RichRule title="divider" />
+</Box>
+```
+
+There is no `<RichGroup>`. In React, sequential rendering is just placing components next to each other inside a container.
+
+### Layout → `<Box>` with flex
+
+Python Rich:
+```python
+from rich.layout import Layout
+layout = Layout()
+layout.split_row(
+    Layout(name="left", ratio=1),
+    Layout(name="right", ratio=2),
+)
+layout["left"].update(panel)
+layout["right"].update(table)
+console.print(layout)
+```
+
+rich-js-ink:
+```tsx
+// Horizontal split with 1:2 ratio
+<Box flexDirection="row">
+  <Box flexGrow={1}>
+    <RichPanel>{"left"}</RichPanel>
+  </Box>
+  <Box flexGrow={2}>
+    <RichTable columns={cols} rows={rows} />
+  </Box>
+</Box>
+
+// Vertical split
+<Box flexDirection="column" height={24}>
+  <Box flexGrow={1}>
+    <RichPanel>{"top"}</RichPanel>
+  </Box>
+  <Box flexGrow={1}>
+    <RichPanel>{"bottom"}</RichPanel>
+  </Box>
+</Box>
+
+// Fixed + flex (sidebar pattern)
+<Box flexDirection="row">
+  <Box width={30}>
+    <RichTree root={tree} />
+  </Box>
+  <Box flexGrow={1}>
+    <RichPanel>{"main content"}</RichPanel>
+  </Box>
+</Box>
+```
+
+| Rich `Layout` | Ink `<Box>` |
+|---|---|
+| `split_row(...)` | `<Box flexDirection="row">` |
+| `split_column(...)` | `<Box flexDirection="column">` |
+| `Layout(ratio=2)` | `<Box flexGrow={2}>` |
+| `Layout(size=30)` | `<Box width={30}>` |
+| `Layout(minimum_size=10)` | `<Box minWidth={10}>` |
+
+### Constrain → `width` prop or `<Box>`
+
+Python Rich:
+```python
+from rich.constrain import Constrain
+console.print(Constrain(panel, width=60))
+```
+
+rich-js-ink:
+```tsx
+// Every component accepts a width prop
+<RichPanel width={60}>{"content"}</RichPanel>
+
+// Or use Box to constrain any component
+<Box width={60}>
+  <RichTable columns={cols} rows={rows} />
+</Box>
+```
+
+### Live → React state
+
+Python Rich:
+```python
+from rich.live import Live
+with Live(table) as live:
+    while updating:
+        live.update(generate_table())
+```
+
+rich-js-ink:
+```tsx
+// Ink IS live rendering — any state change re-renders
+const [data, setData] = useState(initialData);
+
+<RichTable columns={cols} rows={data} />
+
+// Update from async work
+useEffect(() => {
+  const interval = setInterval(() => {
+    setData(fetchLatest());
+  }, 1000);
+  return () => clearInterval(interval);
+}, []);
+```
+
+### Console → Ink's `render()`
+
+Python Rich:
+```python
+from rich.console import Console
+console = Console()
+console.print("[bold]Hello[/]")
+console.print(table)
+```
+
+rich-js-ink:
+```tsx
+// Ink's render() replaces Console entirely
+import { render } from "ink";
+
+render(
+  <Box flexDirection="column">
+    <RichMarkup>{"[bold]Hello[/]"}</RichMarkup>
+    <RichTable columns={cols} rows={rows} />
+  </Box>
+);
+```

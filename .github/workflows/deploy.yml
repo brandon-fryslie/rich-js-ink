@@ -21,6 +21,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Clone and build rich-js dependency
+        run: |
+          git clone https://github.com/brandon-fryslie/rich-js.git ../rich-js
+          cd ../rich-js
+          npm ci
+          npm run build
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

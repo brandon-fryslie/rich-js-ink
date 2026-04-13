@@ -26,10 +26,8 @@ import { RichJSON } from "../src/components/RichJSON.js";
 import { RichPretty } from "../src/components/RichPretty.js";
 import { RichColumns } from "../src/components/RichColumns.js";
 import { RichProgressBar } from "../src/components/RichProgressBar.js";
-import { RichLayout } from "../src/components/RichLayout.js";
-import { RichAlign } from "../src/components/RichAlign.js";
 import { RichThemeProvider } from "../src/hooks/useRichTheme.js";
-import { RichText, ROUNDED, DOUBLE, HEAVY } from "rich-js";
+import { ROUNDED, DOUBLE, HEAVY } from "rich-js";
 
 // --- ANSI → HTML converter ---
 
@@ -212,35 +210,6 @@ addDemo(
   "Multi-column layout from a flat list of items.",
   `<RichColumns items={["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"]} equal />`,
   <RichColumns items={["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"]} equal width={COLS} />,
-);
-
-// Tier 3: Wrappers
-
-addDemo(
-  "RichLayout",
-  "Split-pane layout with ratio-based width distribution.",
-  `<RichLayout
-  direction="row"
-  splits={[
-    { name: "left", ratio: 1, content: "LEFT PANE" },
-    { name: "right", ratio: 2, content: "RIGHT PANE (2x width)" },
-  ]}
-/>`,
-  <RichLayout
-    direction="row"
-    splits={[
-      { name: "left", ratio: 1, content: "LEFT PANE" },
-      { name: "right", ratio: 2, content: "RIGHT PANE (2x width)" },
-    ]}
-    width={COLS}
-  />,
-);
-
-addDemo(
-  "RichAlign",
-  "Horizontal alignment wrapper — left, center, or right.",
-  `<RichAlign align="center">{new RichText("centered text", { end: "" })}</RichAlign>`,
-  <RichAlign align="center" width={COLS}>{new RichText("── centered text ──", { end: "" })}</RichAlign>,
 );
 
 // Tier 4: Animated (static frame)
@@ -513,7 +482,7 @@ const html = `<!DOCTYPE html>
       <h1>rich-js-ink</h1>
       <p class="tagline">Rich terminal renderables as declarative React components for Ink</p>
       <div class="badges">
-        <span class="badge badge-components">20 components</span>
+        <span class="badge badge-components">16 components</span>
         <span class="badge badge-hooks">4 hooks</span>
         <span class="badge badge-animated">animated + interactive</span>
       </div>
