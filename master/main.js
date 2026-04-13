@@ -16065,6 +16065,7 @@ __export(empty_module_exports, {
 var empty_module_default;
 var init_empty_module = __esm({
   "src/empty-module.ts"() {
+    "use strict";
     init_define_process_argv();
     init_define_process_env();
     init_define_process_versions();
@@ -86793,7 +86794,8 @@ var XtermWriteStream = class extends import_events.EventEmitter {
     return this._terminal.rows;
   }
   write(data, callbackOrEncoding, callback) {
-    const str = typeof data === "string" ? data : new TextDecoder().decode(data);
+    const raw = typeof data === "string" ? data : new TextDecoder().decode(data);
+    const str = raw.replace(/\r?\n/g, "\r\n");
     this._terminal.write(str, typeof callbackOrEncoding === "function" ? callbackOrEncoding : callback);
     return true;
   }
@@ -87310,7 +87312,7 @@ var evalScope = {
   SIMPLE,
   ASCII2
 };
-var TERM_COLS = 80;
+var TERM_COLS = 60;
 var Playground = class {
   selectorEl;
   editorEl;
@@ -87380,7 +87382,6 @@ var Playground = class {
       cursorStyle: "bar",
       cursorInactiveStyle: "none",
       disableStdin: false,
-      convertEol: true,
       fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', Consolas, monospace",
       fontSize: 13,
       lineHeight: 1.2,

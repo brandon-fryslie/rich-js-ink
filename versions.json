@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "7e867524c4266d9c93eb07c34b666632a7b1387e",
-      "timestamp": "2026-04-13T06:24:55.189Z",
+      "sha": "34b44dd29e4ac96e706f63df9174d801bf54ad0d",
+      "timestamp": "2026-04-13T11:44:03.189Z",
       "commits": [
         {
-          "sha": "7e867524c4266d9c93eb07c34b666632a7b1387e",
+          "sha": "34b44dd29e4ac96e706f63df9174d801bf54ad0d",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-13T00:24:24-06:00",
-          "message": "fix(site): enable stdin + convertEol + hide cursor\n\n- disableStdin: false so interactive demos (prompt/confirm/select) work\n- convertEol: true for proper line ending handling\n- Hide cursor on terminal reset (Ink manages cursor visibility)\n"
+          "timestamp": "2026-04-13T05:43:35-06:00",
+          "message": "fix(site): fix double newlines, layout overflow, terminal width\n\n- Replace convertEol with manual \\n→\\r\\n in XtermWriteStream to avoid\n  double line feeds from Ink's cursor management\n- Reduce terminal to 60 cols so it fits the column\n- Use minmax(0,1fr) grid columns to prevent overflow\n- Add overflow:hidden on terminal column\n"
         }
       ]
     }
