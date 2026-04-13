@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "9c7bc6fadb2de5257bc297da53809cc782cfdad0",
-      "timestamp": "2026-04-13T06:03:59.776Z",
+      "sha": "2c7c0afa90eab80f1b94ee5e8de77c280e47471b",
+      "timestamp": "2026-04-13T06:07:58.700Z",
       "commits": [
         {
-          "sha": "9c7bc6fadb2de5257bc297da53809cc782cfdad0",
+          "sha": "2c7c0afa90eab80f1b94ee5e8de77c280e47471b",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-13T00:03:31-06:00",
-          "message": "fix(site): force interactive mode for correct Ink rendering\n"
+          "timestamp": "2026-04-13T00:07:28-06:00",
+          "message": "feat(site): Comprehensive demos covering all components and hooks\n\n24 demos covering every exported component and hook:\n- Panel (box styles, markup), Table (full featured), Tree (deep nesting)\n- Markup (all style attributes), Rule (alignment, custom chars)\n- Syntax (TypeScript), Markdown, JSON (sorted), Pretty (indent guides)\n- Columns, Traceback\n- Spinners (all styles), Status, ProgressBar (animated), Progress (multi-task)\n- useSpinnerFrame, useRichRenderable hooks\n- Interactive: RichPrompt, RichConfirm, RichSelect\n- Theme/ColorSystem\n- Compound: Dashboard, File Explorer\n\nAlso adds all hooks and interactive components to eval scope,\nand handles component-definition pattern (function + return) in editor.\n"
         }
       ]
     }

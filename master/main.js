@@ -79137,6 +79137,16 @@ function resolveFlags(flags) {
   }
   return result;
 }
+var kittyModifiers = {
+  shift: 1,
+  alt: 2,
+  ctrl: 4,
+  super: 8,
+  hyper: 16,
+  meta: 32,
+  capsLock: 64,
+  numLock: 128
+};
 
 // node_modules/ink/build/ink.js
 var noop = () => {
@@ -79919,6 +79929,8 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var textDecoder = new TextDecoder();
+var metaKeyCodeRe = /^(?:\x1b)([a-zA-Z0-9])$/;
+var fnKeyRe = /^(?:\x1b+)(O|N|\[|\[\[)(?:(\d+)(?:;(\d+))?([~^$])|(?:1;)?(\d+)?([a-zA-Z]))/;
 var keyName2 = {
   /* xterm/gnome ESC O letter */
   OP: "f1",
@@ -80006,6 +80018,346 @@ var keyName2 = {
   "[Z": "tab"
 };
 var nonAlphanumericKeys = [...Object.values(keyName2), "backspace"];
+var isShiftKey = (code) => {
+  return [
+    "[a",
+    "[b",
+    "[c",
+    "[d",
+    "[e",
+    "[2$",
+    "[3$",
+    "[5$",
+    "[6$",
+    "[7$",
+    "[8$",
+    "[Z"
+  ].includes(code);
+};
+var isCtrlKey = (code) => {
+  return [
+    "Oa",
+    "Ob",
+    "Oc",
+    "Od",
+    "Oe",
+    "[2^",
+    "[3^",
+    "[5^",
+    "[6^",
+    "[7^",
+    "[8^"
+  ].includes(code);
+};
+var kittyKeyRe = /^\x1b\[(\d+)(?:;(\d+)(?::(\d+))?(?:;([\d:]+))?)?u$/;
+var kittySpecialKeyRe = /^\x1b\[(\d+);(\d+):(\d+)([A-Za-z~])$/;
+var kittySpecialLetterKeys = {
+  A: "up",
+  B: "down",
+  C: "right",
+  D: "left",
+  E: "clear",
+  F: "end",
+  H: "home",
+  P: "f1",
+  Q: "f2",
+  R: "f3",
+  S: "f4"
+};
+var kittySpecialNumberKeys = {
+  2: "insert",
+  3: "delete",
+  5: "pageup",
+  6: "pagedown",
+  7: "home",
+  8: "end",
+  11: "f1",
+  12: "f2",
+  13: "f3",
+  14: "f4",
+  15: "f5",
+  17: "f6",
+  18: "f7",
+  19: "f8",
+  20: "f9",
+  21: "f10",
+  23: "f11",
+  24: "f12"
+};
+var kittyCodepointNames = {
+  27: "escape",
+  // 13 (return) and 32 (space) are handled before this lookup
+  // in parseKittyKeypress so they can be marked as printable.
+  9: "tab",
+  127: "backspace",
+  8: "backspace",
+  57358: "capslock",
+  57359: "scrolllock",
+  57360: "numlock",
+  57361: "printscreen",
+  57362: "pause",
+  57363: "menu",
+  57376: "f13",
+  57377: "f14",
+  57378: "f15",
+  57379: "f16",
+  57380: "f17",
+  57381: "f18",
+  57382: "f19",
+  57383: "f20",
+  57384: "f21",
+  57385: "f22",
+  57386: "f23",
+  57387: "f24",
+  57388: "f25",
+  57389: "f26",
+  57390: "f27",
+  57391: "f28",
+  57392: "f29",
+  57393: "f30",
+  57394: "f31",
+  57395: "f32",
+  57396: "f33",
+  57397: "f34",
+  57398: "f35",
+  57399: "kp0",
+  57400: "kp1",
+  57401: "kp2",
+  57402: "kp3",
+  57403: "kp4",
+  57404: "kp5",
+  57405: "kp6",
+  57406: "kp7",
+  57407: "kp8",
+  57408: "kp9",
+  57409: "kpdecimal",
+  57410: "kpdivide",
+  57411: "kpmultiply",
+  57412: "kpsubtract",
+  57413: "kpadd",
+  57414: "kpenter",
+  57415: "kpequal",
+  57416: "kpseparator",
+  57417: "kpleft",
+  57418: "kpright",
+  57419: "kpup",
+  57420: "kpdown",
+  57421: "kppageup",
+  57422: "kppagedown",
+  57423: "kphome",
+  57424: "kpend",
+  57425: "kpinsert",
+  57426: "kpdelete",
+  57427: "kpbegin",
+  57428: "mediaplay",
+  57429: "mediapause",
+  57430: "mediaplaypause",
+  57431: "mediareverse",
+  57432: "mediastop",
+  57433: "mediafastforward",
+  57434: "mediarewind",
+  57435: "mediatracknext",
+  57436: "mediatrackprevious",
+  57437: "mediarecord",
+  57438: "lowervolume",
+  57439: "raisevolume",
+  57440: "mutevolume",
+  57441: "leftshift",
+  57442: "leftcontrol",
+  57443: "leftalt",
+  57444: "leftsuper",
+  57445: "lefthyper",
+  57446: "leftmeta",
+  57447: "rightshift",
+  57448: "rightcontrol",
+  57449: "rightalt",
+  57450: "rightsuper",
+  57451: "righthyper",
+  57452: "rightmeta",
+  57453: "isoLevel3Shift",
+  57454: "isoLevel5Shift"
+};
+var isValidCodepoint = (cp) => cp >= 0 && cp <= 1114111 && !(cp >= 55296 && cp <= 57343);
+var safeFromCodePoint = (cp) => isValidCodepoint(cp) ? String.fromCodePoint(cp) : "?";
+function resolveEventType(value) {
+  if (value === 3)
+    return "release";
+  if (value === 2)
+    return "repeat";
+  return "press";
+}
+function parseKittyModifiers(modifiers2) {
+  return {
+    ctrl: !!(modifiers2 & kittyModifiers.ctrl),
+    shift: !!(modifiers2 & kittyModifiers.shift),
+    meta: !!(modifiers2 & (kittyModifiers.meta | kittyModifiers.alt)),
+    super: !!(modifiers2 & kittyModifiers.super),
+    hyper: !!(modifiers2 & kittyModifiers.hyper),
+    capsLock: !!(modifiers2 & kittyModifiers.capsLock),
+    numLock: !!(modifiers2 & kittyModifiers.numLock)
+  };
+}
+var parseKittyKeypress = (s) => {
+  const match2 = kittyKeyRe.exec(s);
+  if (!match2)
+    return null;
+  const codepoint = parseInt(match2[1], 10);
+  const modifiers2 = match2[2] ? Math.max(0, parseInt(match2[2], 10) - 1) : 0;
+  const eventType = match2[3] ? parseInt(match2[3], 10) : 1;
+  const textField = match2[4];
+  if (!isValidCodepoint(codepoint)) {
+    return null;
+  }
+  let text;
+  if (textField) {
+    text = textField.split(":").map((cp) => safeFromCodePoint(parseInt(cp, 10))).join("");
+  }
+  let name2;
+  let isPrintable;
+  if (codepoint === 32) {
+    name2 = "space";
+    isPrintable = true;
+  } else if (codepoint === 13) {
+    name2 = "return";
+    isPrintable = true;
+  } else if (kittyCodepointNames[codepoint]) {
+    name2 = kittyCodepointNames[codepoint];
+    isPrintable = false;
+  } else if (codepoint >= 1 && codepoint <= 26) {
+    name2 = String.fromCodePoint(codepoint + 96);
+    isPrintable = false;
+  } else {
+    name2 = safeFromCodePoint(codepoint).toLowerCase();
+    isPrintable = true;
+  }
+  if (isPrintable && !text) {
+    text = safeFromCodePoint(codepoint);
+  }
+  return {
+    name: name2,
+    ...parseKittyModifiers(modifiers2),
+    eventType: resolveEventType(eventType),
+    sequence: s,
+    raw: s,
+    isKittyProtocol: true,
+    isPrintable,
+    text
+  };
+};
+var parseKittySpecialKey = (s) => {
+  const match2 = kittySpecialKeyRe.exec(s);
+  if (!match2)
+    return null;
+  const number2 = parseInt(match2[1], 10);
+  const modifiers2 = Math.max(0, parseInt(match2[2], 10) - 1);
+  const eventType = parseInt(match2[3], 10);
+  const terminator = match2[4];
+  const name2 = terminator === "~" ? kittySpecialNumberKeys[number2] : kittySpecialLetterKeys[terminator];
+  if (!name2)
+    return null;
+  return {
+    name: name2,
+    ...parseKittyModifiers(modifiers2),
+    eventType: resolveEventType(eventType),
+    sequence: s,
+    raw: s,
+    isKittyProtocol: true,
+    isPrintable: false
+  };
+};
+var parseKeypress = (s = "") => {
+  let parts;
+  if (s instanceof Uint8Array) {
+    if (s[0] > 127 && s[1] === void 0) {
+      s[0] -= 128;
+      s = "\x1B" + textDecoder.decode(s);
+    } else {
+      s = textDecoder.decode(s);
+    }
+  } else if (s !== void 0 && typeof s !== "string") {
+    s = String(s);
+  } else if (!s) {
+    s = "";
+  }
+  const kittyResult = parseKittyKeypress(s);
+  if (kittyResult)
+    return kittyResult;
+  const kittySpecialResult = parseKittySpecialKey(s);
+  if (kittySpecialResult)
+    return kittySpecialResult;
+  if (kittyKeyRe.test(s)) {
+    return {
+      name: "",
+      ctrl: false,
+      meta: false,
+      shift: false,
+      sequence: s,
+      raw: s,
+      isKittyProtocol: true,
+      isPrintable: false
+    };
+  }
+  const key = {
+    name: "",
+    ctrl: false,
+    meta: false,
+    shift: false,
+    sequence: s,
+    raw: s
+  };
+  key.sequence = key.sequence || s || key.name;
+  if (s === "\r" || s === "\x1B\r") {
+    key.raw = void 0;
+    key.name = "return";
+    key.meta = s.length === 2;
+  } else if (s === "\n") {
+    key.name = "enter";
+  } else if (s === "	") {
+    key.name = "tab";
+  } else if (s === "\b" || s === "\x1B\b") {
+    key.name = "backspace";
+    key.meta = s.charAt(0) === "\x1B";
+  } else if (s === "\x7F" || s === "\x1B\x7F") {
+    key.name = "backspace";
+    key.meta = s.charAt(0) === "\x1B";
+  } else if (s === "\x1B" || s === "\x1B\x1B") {
+    key.name = "escape";
+    key.meta = s.length === 2;
+  } else if (s === " " || s === "\x1B ") {
+    key.name = "space";
+    key.meta = s.length === 2;
+  } else if (s.length === 1 && s <= "") {
+    key.name = String.fromCharCode(s.charCodeAt(0) + "a".charCodeAt(0) - 1);
+    key.ctrl = true;
+  } else if (s.length === 1 && s >= "0" && s <= "9") {
+    key.name = "number";
+  } else if (s.length === 1 && s >= "a" && s <= "z") {
+    key.name = s;
+  } else if (s.length === 1 && s >= "A" && s <= "Z") {
+    key.name = s.toLowerCase();
+    key.shift = true;
+  } else if (parts = metaKeyCodeRe.exec(s)) {
+    key.name = parts[1].toLowerCase();
+    key.meta = true;
+    key.shift = /^[A-Z]$/.test(parts[1]);
+  } else if (parts = fnKeyRe.exec(s)) {
+    const segs = [...s];
+    if (segs[0] === "\x1B" && segs[1] === "\x1B") {
+      key.meta = true;
+    }
+    const code = [parts[1], parts[2], parts[4], parts[6]].filter(Boolean).join("");
+    const modifier = (parts[3] || parts[5] || 1) - 1;
+    key.ctrl = !!(modifier & 4);
+    key.meta = key.meta || !!(modifier & 10);
+    key.shift = !!(modifier & 1);
+    key.code = code;
+    key.name = keyName2[code] ?? "";
+    key.shift = isShiftKey(code) || key.shift;
+    key.ctrl = isCtrlKey(code) || key.ctrl;
+  }
+  return key;
+};
+var parse_keypress_default = parseKeypress;
 
 // node_modules/ink/build/hooks/use-stdin.js
 init_define_process_argv();
@@ -80013,6 +80365,87 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_react21 = __toESM(require_react(), 1);
+var useStdinContext = () => (0, import_react21.useContext)(StdinContext_default);
+
+// node_modules/ink/build/hooks/use-input.js
+var useInput = (inputHandler3, options = {}) => {
+  const { setRawMode, internal_exitOnCtrlC, internal_eventEmitter } = useStdinContext();
+  (0, import_react22.useEffect)(() => {
+    if (options.isActive === false) {
+      return;
+    }
+    setRawMode(true);
+    return () => {
+      setRawMode(false);
+    };
+  }, [options.isActive, setRawMode]);
+  const handleData = (0, import_react22.useEffectEvent)((data) => {
+    const keypress = parse_keypress_default(data);
+    const key = {
+      upArrow: keypress.name === "up",
+      downArrow: keypress.name === "down",
+      leftArrow: keypress.name === "left",
+      rightArrow: keypress.name === "right",
+      pageDown: keypress.name === "pagedown",
+      pageUp: keypress.name === "pageup",
+      home: keypress.name === "home",
+      end: keypress.name === "end",
+      return: keypress.name === "return",
+      escape: keypress.name === "escape",
+      ctrl: keypress.ctrl,
+      shift: keypress.shift,
+      tab: keypress.name === "tab",
+      backspace: keypress.name === "backspace",
+      delete: keypress.name === "delete",
+      meta: keypress.meta,
+      // Kitty keyboard protocol modifiers
+      super: keypress.super ?? false,
+      hyper: keypress.hyper ?? false,
+      capsLock: keypress.capsLock ?? false,
+      numLock: keypress.numLock ?? false,
+      eventType: keypress.eventType
+    };
+    let input2;
+    if (keypress.isKittyProtocol) {
+      if (keypress.isPrintable) {
+        input2 = keypress.text ?? keypress.name;
+      } else if (keypress.ctrl && keypress.name.length === 1) {
+        input2 = keypress.name;
+      } else {
+        input2 = "";
+      }
+    } else if (keypress.ctrl) {
+      input2 = keypress.name ?? "";
+    } else {
+      input2 = keypress.sequence;
+    }
+    if (!keypress.isKittyProtocol && nonAlphanumericKeys.includes(keypress.name)) {
+      input2 = "";
+    }
+    if (input2.startsWith("\x1B")) {
+      input2 = input2.slice(1);
+    }
+    if (input2.length === 1 && /[A-Z]/.test(input2)) {
+      key.shift = true;
+    }
+    if (input2 === "c" && key.ctrl && internal_exitOnCtrlC) {
+      return;
+    }
+    reconciler_default.discreteUpdates(() => {
+      inputHandler3(input2, key);
+    });
+  });
+  (0, import_react22.useEffect)(() => {
+    if (options.isActive === false) {
+      return;
+    }
+    internal_eventEmitter.on("input", handleData);
+    return () => {
+      internal_eventEmitter.removeListener("input", handleData);
+    };
+  }, [options.isActive, internal_eventEmitter]);
+};
+var use_input_default = useInput;
 
 // node_modules/ink/build/hooks/use-paste.js
 init_define_process_argv();
@@ -86035,6 +86468,13 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_react47 = __toESM(require_react(), 1);
+function useRichRenderable(factory, deps) {
+  const windowSize = use_window_size_default();
+  const { colorSystem } = useRichTheme();
+  const width = windowSize.columns;
+  const renderable = (0, import_react47.useMemo)(() => factory(width), [width, ...deps]);
+  return (0, import_react47.useMemo)(() => renderToString(renderable, { width, colorSystem }), [renderable, width, colorSystem]);
+}
 
 // ../dist/hooks/useSpinnerFrame.js
 init_define_process_argv();
@@ -86104,6 +86544,47 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var import_react49 = __toESM(require_react(), 1);
+function useProgress() {
+  const [tasks, setTasks] = (0, import_react49.useState)([]);
+  const nextIdRef = (0, import_react49.useRef)(1);
+  const addTask = (0, import_react49.useCallback)((description, options) => {
+    const id2 = nextIdRef.current++;
+    const task = {
+      id: id2,
+      description,
+      total: options?.total,
+      completed: 0,
+      started: options?.start !== false,
+      visible: options?.visible !== false,
+      startTime: Date.now()
+    };
+    setTasks((prev) => [...prev, task]);
+    return id2;
+  }, []);
+  const updateTask = (0, import_react49.useCallback)((id2, options) => {
+    setTasks((prev) => prev.map((task) => {
+      if (task.id !== id2)
+        return task;
+      const updated = { ...task };
+      if (options.completed !== void 0)
+        updated.completed = options.completed;
+      if (options.advance !== void 0)
+        updated.completed += options.advance;
+      if (options.description !== void 0)
+        updated.description = options.description;
+      if (options.visible !== void 0)
+        updated.visible = options.visible;
+      return updated;
+    }));
+  }, []);
+  const startTask = (0, import_react49.useCallback)((id2) => {
+    setTasks((prev) => prev.map((task) => task.id === id2 ? { ...task, started: true, startTime: Date.now() } : task));
+  }, []);
+  const removeTask = (0, import_react49.useCallback)((id2) => {
+    setTasks((prev) => prev.filter((task) => task.id !== id2));
+  }, []);
+  return { tasks, addTask, updateTask, startTask, removeTask };
+}
 
 // ../dist/components/RichProgress.js
 init_define_process_argv();
@@ -86112,6 +86593,82 @@ init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime17 = __toESM(require_jsx_runtime(), 1);
 var import_react50 = __toESM(require_react(), 1);
+function formatTime(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor(seconds % 3600 / 60);
+  const s = Math.floor(seconds % 60);
+  return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+function buildColumn(def, task, spinnerFrame) {
+  switch (def) {
+    case "text": {
+      return new RichText(task.description, { end: "" });
+    }
+    case "bar": {
+      const bar = new ProgressBar({
+        total: task.total ?? 100,
+        completed: task.completed,
+        width: 40
+      });
+      const segs = [...bar.render({ maxWidth: 40 })];
+      const result = new RichText("", { end: "" });
+      for (const seg of segs) {
+        result.append(seg.text, seg.style);
+      }
+      return result;
+    }
+    case "percentage": {
+      const percent = task.total ? Math.min(100, Math.round(task.completed / task.total * 100)) : 0;
+      return new RichText(`${percent}%`, { end: "" });
+    }
+    case "time": {
+      if (!task.started || task.completed <= 0 || !task.total) {
+        return new RichText("-:--:--", { end: "" });
+      }
+      const elapsed = (Date.now() - task.startTime) / 1e3;
+      const rate = task.completed / elapsed;
+      const remaining = (task.total - task.completed) / rate;
+      return new RichText(formatTime(remaining), { end: "" });
+    }
+    case "elapsed": {
+      if (!task.started) {
+        return new RichText("0:00:00", { end: "" });
+      }
+      const elapsed = (Date.now() - task.startTime) / 1e3;
+      return new RichText(formatTime(elapsed), { end: "" });
+    }
+    case "spinner": {
+      const result = new RichText("", { end: "" });
+      result.append(spinnerFrame, Style.parse("green"));
+      return result;
+    }
+    case "mofn": {
+      const total = task.total ?? "?";
+      return new RichText(`${task.completed}/${total}`, { end: "" });
+    }
+  }
+}
+function RichProgress({ tasks, columns = ["text", "bar", "percentage", "time"], expand, width }) {
+  const windowSize = use_window_size_default();
+  const effectiveWidth = width ?? windowSize.columns;
+  const hasAnimated = columns.includes("spinner") || columns.includes("time") || columns.includes("elapsed");
+  const { frame } = useAnimation({ interval: 80, isActive: hasAnimated });
+  const spinnerData = SPINNERS[DEFAULT_SPINNER];
+  const spinnerFrame = spinnerData.frames[frame % spinnerData.frames.length];
+  const output = (0, import_react50.useMemo)(() => {
+    const table = Table.grid({ expand });
+    for (const _col of columns) {
+      table.addColumn();
+    }
+    const visibleTasks = tasks.filter((t3) => t3.visible);
+    for (const task of visibleTasks) {
+      const cells = columns.map((def) => buildColumn(def, task, spinnerFrame));
+      table.addRow(...cells);
+    }
+    return renderToString(table, { width: effectiveWidth });
+  }, [tasks, columns, expand, effectiveWidth, spinnerFrame]);
+  return (0, import_jsx_runtime17.jsx)(Text3, { children: output });
+}
 
 // ../dist/components/RichPrompt.js
 init_define_process_argv();
@@ -86120,6 +86677,31 @@ init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime18 = __toESM(require_jsx_runtime(), 1);
 var import_react51 = __toESM(require_react(), 1);
+function RichPrompt({ message, defaultValue = "", onSubmit, style }) {
+  const [value, setValue] = (0, import_react51.useState)(defaultValue);
+  const [submitted, setSubmitted] = (0, import_react51.useState)(false);
+  const { colorSystem } = useRichTheme();
+  const cs = colorSystem ?? ColorSystem.TRUECOLOR;
+  use_input_default((0, import_react51.useCallback)((input2, key) => {
+    if (submitted)
+      return;
+    if (key.return) {
+      setSubmitted(true);
+      onSubmit(value);
+      return;
+    }
+    if (key.backspace || key.delete) {
+      setValue((prev) => prev.slice(0, -1));
+      return;
+    }
+    if (!key.ctrl && !key.meta && input2) {
+      setValue((prev) => prev + input2);
+    }
+  }, [value, submitted, onSubmit]), { isActive: !submitted });
+  const styledMessage = style ? Style.parse(style).render(message, cs) : message;
+  const cursor2 = submitted ? "" : "\u2588";
+  return (0, import_jsx_runtime18.jsxs)(Text3, { children: [styledMessage, ": ", value, cursor2] });
+}
 
 // ../dist/components/RichConfirm.js
 init_define_process_argv();
@@ -86128,6 +86710,31 @@ init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime19 = __toESM(require_jsx_runtime(), 1);
 var import_react52 = __toESM(require_react(), 1);
+function RichConfirm({ message, defaultValue, onConfirm }) {
+  const [answered, setAnswered] = (0, import_react52.useState)(false);
+  const [result, setResult] = (0, import_react52.useState)(void 0);
+  use_input_default((0, import_react52.useCallback)((input2, key) => {
+    if (answered)
+      return;
+    const lower = input2.toLowerCase();
+    if (lower === "y") {
+      setAnswered(true);
+      setResult(true);
+      onConfirm(true);
+    } else if (lower === "n") {
+      setAnswered(true);
+      setResult(false);
+      onConfirm(false);
+    } else if (key.return && defaultValue !== void 0) {
+      setAnswered(true);
+      setResult(defaultValue);
+      onConfirm(defaultValue);
+    }
+  }, [answered, defaultValue, onConfirm]), { isActive: !answered });
+  const hint = defaultValue === true ? " [Y/n]" : defaultValue === false ? " [y/N]" : " [y/n]";
+  const suffix = answered ? result ? " Yes" : " No" : "";
+  return (0, import_jsx_runtime19.jsxs)(Text3, { children: [message, hint, suffix] });
+}
 
 // ../dist/components/RichSelect.js
 init_define_process_argv();
@@ -86136,6 +86743,32 @@ init_define_process_versions();
 init_process_shim_inject();
 var import_jsx_runtime20 = __toESM(require_jsx_runtime(), 1);
 var import_react53 = __toESM(require_react(), 1);
+function RichSelect({ items, onSelect, style, highlightStyle = "bold cyan" }) {
+  const [cursor2, setCursor] = (0, import_react53.useState)(0);
+  const [selected, setSelected] = (0, import_react53.useState)(false);
+  const { colorSystem } = useRichTheme();
+  const cs = colorSystem ?? ColorSystem.TRUECOLOR;
+  const parsedStyle = style ? Style.parse(style) : void 0;
+  const parsedHighlight = Style.parse(highlightStyle);
+  use_input_default((0, import_react53.useCallback)((_input, key) => {
+    if (selected)
+      return;
+    if (key.upArrow) {
+      setCursor((prev) => prev > 0 ? prev - 1 : items.length - 1);
+    } else if (key.downArrow) {
+      setCursor((prev) => prev < items.length - 1 ? prev + 1 : 0);
+    } else if (key.return) {
+      setSelected(true);
+      onSelect(items[cursor2], cursor2);
+    }
+  }, [selected, items, cursor2, onSelect]), { isActive: !selected });
+  return (0, import_jsx_runtime20.jsx)(Box_default, { flexDirection: "column", children: items.map((item, i) => {
+    const isHighlighted = i === cursor2;
+    const prefix = isHighlighted ? "\u276F " : "  ";
+    const styledItem = isHighlighted ? parsedHighlight.render(item, cs) : parsedStyle ? parsedStyle.render(item, cs) : item;
+    return (0, import_jsx_runtime20.jsxs)(Text3, { children: [prefix, styledItem] }, i);
+  }) });
+}
 
 // src/xterm-ink-adapter.ts
 init_define_process_argv();
@@ -86211,165 +86844,418 @@ init_define_process_env();
 init_define_process_versions();
 init_process_shim_inject();
 var demos = [
+  // --- Panels ---
   {
-    title: "RichPanel",
-    description: "Bordered box with title, supporting Rich markup.",
-    rows: 6,
-    code: `<RichPanel title="Hello" box={ROUNDED} style="cyan">
-  {"This is a [bold magenta]rich-js[/] Panel\\nrendered inside Ink!"}
+    title: "Panel \u2014 Box Styles",
+    description: "Panels with different box styles. Try HEAVY, ASCII, SQUARE, MINIMAL, DOUBLE.",
+    rows: 18,
+    code: `<Box flexDirection="column" gap={1}>
+  <RichPanel title="Rounded" box={ROUNDED} style="cyan">
+    {"[bold]ROUNDED[/] \u2014 the default, soft corners"}
+  </RichPanel>
+  <RichPanel title="Heavy" box={HEAVY} style="magenta">
+    {"[bold]HEAVY[/] \u2014 thick borders for emphasis"}
+  </RichPanel>
+  <RichPanel title="Double" box={DOUBLE} style="yellow">
+    {"[bold]DOUBLE[/] \u2014 classic double-line border"}
+  </RichPanel>
+</Box>`
+  },
+  {
+    title: "Panel \u2014 Rich Markup",
+    description: "Panel content is parsed as Rich markup. Supports bold, italic, colors, and nesting.",
+    rows: 8,
+    code: `<RichPanel title="[bold cyan]Styled Title[/]" box={ROUNDED} style="green">
+  {"[bold red]Error:[/] Connection to [underline]db.example.com[/] [dim]timed out[/]\\n"}
 </RichPanel>`
   },
+  // --- Tables ---
   {
-    title: "RichTable",
-    description: "Declarative table from columns and rows.",
-    rows: 8,
+    title: "Table \u2014 Full Featured",
+    description: "Tables with styled headers, right-aligned columns, and different box styles.",
+    rows: 12,
     code: `<RichTable
   columns={[
-    { header: "Name", style: "bold" },
-    { header: "Language" },
-    { header: "Stars", justify: "right" },
+    { header: "Package", style: "bold cyan" },
+    { header: "Version", justify: "center" },
+    { header: "Size", justify: "right" },
+    { header: "Status", style: "bold" },
   ]}
   rows={[
-    ["Rich", "Python", "50k"],
-    ["rich-js", "TypeScript", "new"],
-    ["Ink", "TypeScript", "28k"],
+    ["react", "19.2.5", "8.2 kB", "[green]up to date[/]"],
+    ["ink", "7.0.0", "42 kB", "[green]up to date[/]"],
+    ["rich-js", "0.0.1", "120 kB", "[yellow]patch available[/]"],
+    ["typescript", "6.0.2", "35 MB", "[red]major update[/]"],
   ]}
-  box={DOUBLE}
+  box={ROUNDED}
 />`
   },
+  // --- Tree ---
   {
-    title: "RichTree",
-    description: "Tree from nested data structure.",
-    rows: 10,
+    title: "Tree \u2014 Deep Nesting",
+    description: "Trees render nested data with styled guide lines.",
+    rows: 14,
     code: `<RichTree
   root={{
-    label: "src/",
+    label: "[bold]project/[/]",
     children: [
-      { label: "core/", children: [
-        { label: "color.ts" },
-        { label: "style.ts" },
-        { label: "segment.ts" },
+      { label: "[cyan]src/[/]", children: [
+        { label: "[cyan]core/[/]", children: [
+          { label: "color.ts" },
+          { label: "style.ts" },
+          { label: "segment.ts" },
+        ]},
+        { label: "[cyan]components/[/]", children: [
+          { label: "RichPanel.tsx" },
+          { label: "RichTable.tsx" },
+          { label: "RichSpinner.tsx" },
+        ]},
+        { label: "index.ts" },
       ]},
-      { label: "renderables/", children: [
-        { label: "panel.ts" },
-        { label: "table.ts" },
+      { label: "[yellow]tests/[/]", children: [
+        { label: "bridge.test.ts" },
+        { label: "components.test.tsx" },
       ]},
+      { label: "[dim]package.json[/]" },
+      { label: "[dim]tsconfig.json[/]" },
     ],
   }}
-  guide_style="dim cyan"
+  guide_style="dim blue"
 />`
   },
+  // --- Markup ---
   {
-    title: "RichMarkup",
-    description: "Rich markup strings with inline styling.",
-    rows: 3,
-    code: `<RichMarkup>
-  {"[bold cyan]Hello[/] [dim]world[/] [italic green]from rich-js![/]"}
-</RichMarkup>`
+    title: "Rich Markup",
+    description: "Inline styled text using Rich markup syntax. Supports all style attributes.",
+    rows: 6,
+    code: `<Box flexDirection="column">
+  <RichMarkup>{"[bold]Bold[/] [italic]Italic[/] [underline]Underline[/] [strikethrough]Strike[/]"}</RichMarkup>
+  <RichMarkup>{"[red]Red[/] [green]Green[/] [blue]Blue[/] [yellow]Yellow[/] [magenta]Magenta[/] [cyan]Cyan[/]"}</RichMarkup>
+  <RichMarkup>{"[bold red on white] ALERT [/] [bold green on black] SUCCESS [/] [bold yellow on black] WARNING [/]"}</RichMarkup>
+  <RichMarkup>{"[dim]Dim text[/] and [bright_cyan]bright cyan[/] and [bold italic magenta]bold italic magenta[/]"}</RichMarkup>
+</Box>`
   },
+  // --- Rule ---
   {
-    title: "RichRule",
-    description: "Horizontal divider with optional title.",
-    rows: 3,
-    code: `<RichRule title="Section Divider" style="blue" />`
+    title: "Rule \u2014 Dividers",
+    description: "Horizontal rules with titles and alignment options.",
+    rows: 8,
+    code: `<Box flexDirection="column">
+  <RichRule style="cyan" />
+  <RichRule title="Center (default)" style="green" />
+  <RichRule title="Left Aligned" style="yellow" align="left" />
+  <RichRule title="Right Aligned" style="magenta" align="right" />
+  <RichRule title="Custom Chars" style="blue" characters="=" />
+</Box>`
   },
+  // --- Syntax ---
   {
-    title: "RichSyntax",
-    description: "Syntax-highlighted source code.",
-    rows: 5,
+    title: "Syntax Highlighting",
+    description: "Source code with syntax highlighting and line numbers.",
+    rows: 14,
     code: `<RichSyntax language="typescript" lineNumbers>
-  {\`function greet(name: string): string {
-  return \\\`Hello, \\\${name}!\\\`;
+  {\`interface Config {
+  host: string;
+  port: number;
+  debug: boolean;
+}
+
+async function connect(config: Config): Promise<void> {
+  const url = \\\`http://\\\${config.host}:\\\${config.port}\\\`;
+  console.log("Connecting to", url);
+  // TODO: implement retry logic
+  await fetch(url);
 }\`}
 </RichSyntax>`
   },
+  // --- Markdown ---
   {
-    title: "RichMarkdown",
-    description: "Rendered Markdown content.",
-    rows: 5,
+    title: "Markdown Rendering",
+    description: "Rendered Markdown with headings, lists, code blocks, and emphasis.",
+    rows: 12,
     code: `<RichMarkdown>
-  {"# Welcome\\n\\nThis is **bold** and \`inline code\`."}
+  {"# rich-js-ink\\n\\nA **bridge** between rich-js and Ink.\\n\\n## Features\\n\\n- Panels, tables, and trees\\n- *Animated* spinners and progress bars\\n- Interactive prompts\\n\\n> Built with love for the terminal."}
 </RichMarkdown>`
   },
+  // --- JSON ---
   {
-    title: "RichJSON",
-    description: "Syntax-highlighted JSON display.",
-    rows: 10,
+    title: "JSON Display",
+    description: "Syntax-highlighted JSON with sorting and indentation options.",
+    rows: 16,
     code: `<RichJSON
   data={{
     name: "rich-js-ink",
     version: "0.0.1",
-    features: ["panels", "tables", "spinners"],
+    description: "Ink components for rich-js",
+    dependencies: {
+      ink: "^7.0.0",
+      react: "^19.2.5",
+      "rich-js": "^0.0.1",
+    },
+    keywords: ["terminal", "rich", "ink", "react", "tui"],
+    license: "MIT",
   }}
   indent={2}
+  sortKeys
 />`
   },
+  // --- Pretty ---
   {
-    title: "RichPretty",
-    description: "Pretty-printed data structures.",
-    rows: 8,
+    title: "Pretty Print",
+    description: "Pretty-printed JavaScript data structures with type highlighting.",
+    rows: 14,
     code: `<RichPretty
   data={{
     users: [
-      { name: "Alice", role: "admin" },
-      { name: "Bob", role: "user" },
+      { id: 1, name: "Alice", role: "admin", active: true },
+      { id: 2, name: "Bob", role: "user", active: false },
+      { id: 3, name: "Charlie", role: "user", active: true },
     ],
+    metadata: {
+      total: 3,
+      page: 1,
+      timestamp: "2026-04-13T00:00:00Z",
+    },
   }}
   expandAll
+  indentGuides
 />`
   },
+  // --- Columns ---
   {
-    title: "RichColumns",
-    description: "Multi-column layout from items.",
-    rows: 3,
-    code: `<RichColumns
-  items={["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"]}
-  equal
-/>`
-  },
-  {
-    title: "RichSpinner",
-    description: "Animated spinners (live!).",
-    rows: 5,
+    title: "Columns Layout",
+    description: "Multi-column layout arranging items automatically.",
+    rows: 4,
     code: `<Box flexDirection="column">
-  <RichSpinner name="dots" text="Loading resources..." style="cyan" />
-  <RichSpinner name="line" text="Compiling..." style="yellow" />
-  <RichSpinner name="dots2" text="Deploying..." style="green" />
+  <RichColumns items={["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta"]} equal />
 </Box>`
   },
+  // --- Traceback ---
   {
-    title: "RichStatus",
-    description: "Spinner + status message.",
-    rows: 3,
-    code: `<RichStatus message="Installing dependencies..." spinner="dots" style="bold blue" />`
+    title: "Error Traceback",
+    description: "Formatted error display with stack trace.",
+    rows: 10,
+    code: `<RichTraceback error={(() => {
+  try {
+    throw new Error("Cannot read property 'id' of undefined");
+  } catch (e) {
+    return e;
+  }
+})()} maxFrames={5} />`
   },
+  // --- Spinners ---
   {
-    title: "RichProgressBar",
-    description: "Animated progress bar (try changing completed).",
-    rows: 3,
-    code: `<RichProgressBar completed={65} total={100} style="green" />`
+    title: "Spinners \u2014 All Styles",
+    description: "Live animated spinners. Each uses Ink's useAnimation for timing.",
+    rows: 8,
+    code: `<Box flexDirection="column">
+  <RichSpinner name="dots" text="dots \u2014 the classic" style="cyan" />
+  <RichSpinner name="dots2" text="dots2 \u2014 braille variant" style="green" />
+  <RichSpinner name="dots3" text="dots3 \u2014 another braille" style="yellow" />
+  <RichSpinner name="line" text="line \u2014 ascii spinner" style="magenta" />
+  <RichSpinner name="pipe" text="pipe \u2014 box drawing" style="blue" />
+  <RichSpinner name="simpleDots" text="simpleDots \u2014 minimal" style="red" />
+</Box>`
   },
+  // --- Status ---
   {
-    title: "Compound",
-    description: "Components compose inside Ink's flexbox.",
-    rows: 12,
-    code: `<Box flexDirection="column" gap={1}>
-  <RichPanel title="Dashboard" box={HEAVY} style="magenta">
-    {"[bold]System Status[/]: [green]Operational[/]"}
+    title: "Status Messages",
+    description: "Spinner + styled status text. Try changing the spinner name and style.",
+    rows: 5,
+    code: `<Box flexDirection="column">
+  <RichStatus message="Downloading packages..." spinner="dots" style="bold cyan" />
+  <RichStatus message="Compiling TypeScript..." spinner="line" style="bold yellow" />
+  <RichStatus message="Running tests..." spinner="dots2" style="bold green" />
+</Box>`
+  },
+  // --- Progress Bar ---
+  {
+    title: "Progress Bar \u2014 Animated",
+    description: "Animated progress bar. Uses React state to drive animation.",
+    rows: 5,
+    code: `function AnimatedBar() {
+  const [completed, setCompleted] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setCompleted(c => c >= 100 ? 0 : c + 2), 100);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <Box flexDirection="column">
+      <RichProgressBar completed={completed} total={100} style="green" />
+      <Text>  {completed}% complete</Text>
+    </Box>
+  );
+}
+return AnimatedBar;`
+  },
+  // --- Multi-Task Progress ---
+  {
+    title: "Multi-Task Progress",
+    description: "Multiple progress tasks with useProgress() hook. Columns: spinner, text, bar, percentage.",
+    rows: 6,
+    code: `function MultiProgress() {
+  const { tasks, addTask, updateTask } = useProgress();
+  useEffect(() => {
+    const t1 = addTask("Downloading packages", { total: 100 });
+    const t2 = addTask("Building assets", { total: 50 });
+    const t3 = addTask("Running tests", { total: 200 });
+    const id = setInterval(() => {
+      updateTask(t1, { advance: 3 });
+      updateTask(t2, { advance: 1 });
+      updateTask(t3, { advance: 5 });
+    }, 200);
+    return () => clearInterval(id);
+  }, []);
+  return <RichProgress tasks={tasks} columns={["spinner", "text", "bar", "percentage"]} />;
+}
+return MultiProgress;`
+  },
+  // --- useSpinnerFrame ---
+  {
+    title: "useSpinnerFrame Hook",
+    description: "Low-level hook returning the current spinner frame string for custom UIs.",
+    rows: 5,
+    code: `function CustomSpinner() {
+  const frame = useSpinnerFrame("dots");
+  const frame2 = useSpinnerFrame("line");
+  return (
+    <Box flexDirection="column">
+      <Text>{frame}  Custom spinner UI with useSpinnerFrame</Text>
+      <Text>{frame2}  Mix different spinner styles freely</Text>
+    </Box>
+  );
+}
+return CustomSpinner;`
+  },
+  // --- useRichRenderable ---
+  {
+    title: "useRichRenderable Hook",
+    description: "Construct renderables inline without a dedicated component.",
+    rows: 6,
+    code: `function InlineRenderable() {
+  const output = useRichRenderable(
+    (width) => new RichText("[bold cyan]Built with[/] useRichRenderable\\n[dim]Width: " + width + " columns[/]"),
+    []
+  );
+  return <Text>{output}</Text>;
+}
+return InlineRenderable;`
+  },
+  // --- Interactive: Prompt ---
+  {
+    title: "RichPrompt \u2014 Text Input",
+    description: "Interactive text input. Type in the terminal and press Enter.",
+    rows: 4,
+    code: `function PromptDemo() {
+  const [result, setResult] = useState(null);
+  if (result !== null) {
+    return <Text>You entered: <Text bold color="green">{result}</Text></Text>;
+  }
+  return <RichPrompt message="Enter your name" defaultValue="World" onSubmit={setResult} style="bold cyan" />;
+}
+return PromptDemo;`
+  },
+  // --- Interactive: Confirm ---
+  {
+    title: "RichConfirm \u2014 Yes/No",
+    description: "Yes/no confirmation prompt. Press y or n.",
+    rows: 4,
+    code: `function ConfirmDemo() {
+  const [result, setResult] = useState(null);
+  if (result !== null) {
+    return <Text>{result ? "Confirmed!" : "Cancelled."}</Text>;
+  }
+  return <RichConfirm message="Deploy to production?" defaultValue={false} onConfirm={setResult} />;
+}
+return ConfirmDemo;`
+  },
+  // --- Interactive: Select ---
+  {
+    title: "RichSelect \u2014 Selection List",
+    description: "Arrow keys to navigate, Enter to select.",
+    rows: 8,
+    code: `function SelectDemo() {
+  const [selected, setSelected] = useState(null);
+  if (selected !== null) {
+    return <Text>Selected: <Text bold color="cyan">{selected}</Text></Text>;
+  }
+  return <RichSelect
+    items={["Create new project", "Open existing", "Import from Git", "View documentation", "Exit"]}
+    onSelect={(item) => setSelected(item)}
+    highlightStyle="bold cyan"
+  />;
+}
+return SelectDemo;`
+  },
+  // --- Theme Provider ---
+  {
+    title: "Theme \u2014 Color Systems",
+    description: "RichThemeProvider sets color system for all children. Try ColorSystem.EIGHT_BIT.",
+    rows: 6,
+    code: `<Box flexDirection="column">
+  <RichPanel title="Truecolor (default)" box={ROUNDED} style="rgb(100,200,255)">
+    {"[rgb(255,100,50)]Custom RGB colors[/] with [rgb(50,255,150)]truecolor support[/]"}
   </RichPanel>
-  <RichRule title="Metrics" style="dim" />
+</Box>`
+  },
+  // --- Compound: Dashboard ---
+  {
+    title: "Dashboard \u2014 Compound Demo",
+    description: "Multiple components composed with Ink's flexbox layout.",
+    rows: 16,
+    code: `<Box flexDirection="column" gap={1}>
+  <RichPanel title="System Dashboard" box={HEAVY} style="cyan">
+    {"[bold green]All systems operational[/] \u2014 [dim]Last checked: just now[/]"}
+  </RichPanel>
+  <RichRule title="Services" style="dim" />
   <RichTable
     columns={[
-      { header: "Metric" },
-      { header: "Value", justify: "right" },
+      { header: "Service", style: "bold" },
+      { header: "Status" },
+      { header: "Latency", justify: "right" },
+      { header: "Uptime", justify: "right" },
     ]}
     rows={[
-      ["Uptime", "99.97%"],
-      ["Latency", "12ms"],
-      ["Throughput", "1.2k/s"],
+      ["API Gateway", "[green]healthy[/]", "12ms", "99.99%"],
+      ["Database", "[green]healthy[/]", "3ms", "99.97%"],
+      ["Cache", "[yellow]degraded[/]", "45ms", "99.5%"],
+      ["Worker Queue", "[green]healthy[/]", "8ms", "99.98%"],
     ]}
     box={ROUNDED}
   />
+  <RichSpinner name="dots" text="Monitoring..." style="dim cyan" />
+</Box>`
+  },
+  // --- Compound: File Explorer ---
+  {
+    title: "File Explorer \u2014 Compound",
+    description: "Tree + panel + syntax highlighting composed together.",
+    rows: 18,
+    code: `<Box flexDirection="column" gap={1}>
+  <RichTree
+    root={{
+      label: "[bold]my-app/[/]",
+      children: [
+        { label: "[cyan]src/[/]", children: [
+          { label: "[green]App.tsx[/]" },
+          { label: "index.ts" },
+        ]},
+        { label: "[yellow]package.json[/]" },
+      ],
+    }}
+    guide_style="dim"
+  />
+  <RichRule title="App.tsx" style="dim green" />
+  <RichSyntax language="typescript" lineNumbers>
+    {\`import React from 'react';
+import { render } from 'ink';
+
+function App() {
+  return <Text>Hello, world!</Text>;
+}
+
+render(<App />);\`}
+  </RichSyntax>
 </Box>`
   }
 ];
@@ -86377,8 +87263,13 @@ var demos = [
 // src/playground.ts
 var evalScope = {
   React: import_react54.default,
+  useState: import_react54.useState,
+  useEffect: import_react54.useEffect,
+  useCallback: import_react54.useCallback,
+  useRef: import_react54.useRef,
   Box: Box_default,
   Text: Text3,
+  useInput: use_input_default,
   RichPanel,
   RichTable,
   RichTree,
@@ -86393,13 +87284,31 @@ var evalScope = {
   RichSpinner,
   RichProgressBar,
   RichStatus,
+  RichProgress,
+  RichPrompt,
+  RichConfirm,
+  RichSelect,
   RichThemeProvider,
+  useProgress,
+  useSpinnerFrame,
+  useRichRenderable,
+  renderToString,
+  Style,
+  RichText,
+  renderMarkup: render2,
+  ColorSystem,
+  SPINNERS,
+  DEFAULT_SPINNER,
   ROUNDED,
   DOUBLE,
   HEAVY,
   ASCII,
   SQUARE,
-  MINIMAL
+  MINIMAL,
+  MARKDOWN,
+  HORIZONTALS,
+  SIMPLE,
+  ASCII2
 };
 var TERM_COLS = 80;
 var Playground = class {
@@ -86540,16 +87449,19 @@ var Playground = class {
     this.errorEl.textContent = "";
     this.errorEl.style.display = "none";
     try {
-      const wrappedCode = `
-        function __PlaygroundComponent() {
-          return (
-            <RichThemeProvider>
-              ${jsxCode}
-            </RichThemeProvider>
-          );
-        }
-        return __PlaygroundComponent;
-      `;
+      const isComponentDef = /^(?:function|const|let|var)\s/.test(jsxCode.trim()) || jsxCode.trim().startsWith("return ");
+      const wrappedCode = isComponentDef ? `
+          ${jsxCode}
+        ` : `
+          function __PlaygroundComponent() {
+            return (
+              <RichThemeProvider>
+                ${jsxCode}
+              </RichThemeProvider>
+            );
+          }
+          return __PlaygroundComponent;
+        `;
       const { code: jsCode } = transform(wrappedCode, {
         transforms: ["jsx"],
         jsxRuntime: "classic",
@@ -86564,7 +87476,12 @@ var Playground = class {
       const stdout2 = new XtermWriteStream(this.terminal);
       const stdin2 = new XtermReadStream(this.terminal);
       const stderr2 = new XtermWriteStream(this.terminal);
-      this.currentInk = render_default(import_react54.default.createElement(Component), {
+      const wrapped = import_react54.default.createElement(
+        RichThemeProvider,
+        null,
+        import_react54.default.createElement(Component)
+      );
+      this.currentInk = render_default(wrapped, {
         stdout: stdout2,
         stdin: stdin2,
         stderr: stderr2,
