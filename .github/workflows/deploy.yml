@@ -30,11 +30,12 @@ jobs:
           git clone https://github.com/brandon-fryslie/rich-js.git ../rich-js
           cd ../rich-js
           npm ci
-          # tsc emits output even with diagnostics (noEmitOnError is not set).
-          # Run tsc, then verify emission succeeded.
-          npx tsc -p tsconfig.json --noUnusedLocals false --noUnusedParameters false; tsc_exit=$?
+          # tsc emits JS+DTS even with diagnostics (noEmitOnError is unset).
+          # Capture exit code without triggering set -e, then verify output.
+          tsc_exit=0
+          npx tsc -p tsconfig.json --noUnusedLocals false --noUnusedParameters false || tsc_exit=$?
           if [ ! -f dist/index.js ] || [ ! -f dist/index.d.ts ]; then
-            echo "ERROR: rich-js build failed — dist/index.js or dist/index.d.ts missing"
+            echo "ERROR: rich-js build failed — dist/index.js or dist/index.d.ts missing (tsc exit=$tsc_exit)"
             exit 1
           fi
           echo "rich-js built successfully (tsc exit=$tsc_exit, output verified)"
