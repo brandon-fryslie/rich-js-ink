@@ -40,7 +40,7 @@ jobs:
           fi
           echo "rich-js built successfully (tsc exit=$tsc_exit, output verified)"
 
-      - run: npm ci
+      - run: npm install
       - run: npm run build
       - run: npm run build:site
 
