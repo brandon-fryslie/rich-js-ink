@@ -100,10 +100,13 @@ await esbuild.build({
     global: "globalThis",
   },
   alias: {
-    // Dedupe React — prevent multiple copies from file: symlinks
+    // Dedupe React + Ink — prevent multiple copies from file: symlinks.
+    // Without this, components from rich-js-ink resolve to ../node_modules/
+    // copies while render() uses ./node_modules/ — different context objects.
     react: resolve(__dirname, "node_modules/react"),
     "react/jsx-runtime": resolve(__dirname, "node_modules/react/jsx-runtime.js"),
     "react/jsx-dev-runtime": resolve(__dirname, "node_modules/react/jsx-dev-runtime.js"),
+    ink: resolve(__dirname, "node_modules/ink/build/index.js"),
     // Bare module polyfills (non-node: prefix)
     events: "events",
     buffer: "buffer",
