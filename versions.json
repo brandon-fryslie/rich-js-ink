@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "122fc4b966c3c563c8a719099a06f9ea08c76344",
-      "timestamp": "2026-04-15T05:30:29.534Z",
+      "sha": "3eda2540cd9856935d7e58d408df954958814024",
+      "timestamp": "2026-04-15T06:56:52.736Z",
       "commits": [
         {
-          "sha": "122fc4b966c3c563c8a719099a06f9ea08c76344",
+          "sha": "3eda2540cd9856935d7e58d408df954958814024",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-14T23:30:03-06:00",
-          "message": "feat(site): real terminal via WebContainer\n\nReplace in-browser Ink rendering with a real Node.js runtime via\nWebContainer (StackBlitz). Users get an actual shell prompt where\nthey can run demos with `npx tsx demo.tsx`.\n\nArchitecture:\n- coi-serviceworker enables SharedArrayBuffer on GitHub Pages\n- WebContainer boots, mounts demo files, runs npm install\n- jsh shell spawned and connected to xterm.js\n- Selecting a demo writes demo.tsx and runs it\n- Run button sends Ctrl+C + `npx tsx demo.tsx` to shell\n- Editor changes auto-write demo.tsx (debounced 500ms)\n\nDrops all Node polyfills (React/Ink/rich-js run inside WebContainer\nnow, not the browser) — bundle down from 3.1MB to 1.4MB.\n"
+          "timestamp": "2026-04-15T00:56:26-06:00",
+          "message": "perf(site): eliminate npm install — pre-built runtime bundle\n\nBuild a 1.9MB runtime.mjs at build time containing React + Ink +\nrich-js + rich-js-ink pre-bundled. Mount it directly into WebContainer.\nDemos import from ./runtime.mjs and run with `node demo.mjs`.\n\nBoot sequence is now:\n1. Fetch runtime.mjs + boot WebContainer (parallel)\n2. Mount filesystem (runtime + demo file)\n3. Spawn shell — ready\n\nNo npm install, no package downloads. Should be seconds, not minutes.\n"
         }
       ]
     }

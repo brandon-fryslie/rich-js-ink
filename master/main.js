@@ -32694,12 +32694,14 @@ render(<App />);\`}
 ];
 
 // src/webcontainer-fs.ts
-function wrapDemo(code) {
-  const isComponentDef = /^(?:function|const|let|var)\s/.test(code.trim()) || code.trim().startsWith("return ");
-  if (isComponentDef) {
-    return `import React, { useState, useEffect, useCallback, useRef } from "react";
-import { render, Box, Text, useInput } from "ink";
-import {
+var runtimeContent = "";
+async function loadRuntime() {
+  const resp = await fetch("runtime.mjs");
+  runtimeContent = await resp.text();
+}
+var IMPORT_HEADER = `import {
+  React, useState, useEffect, useCallback, useRef, useMemo,
+  render, Box, Text, useInput,
   RichPanel, RichTable, RichTree, RichMarkup, RichRule,
   RichSyntax, RichMarkdown, RichJSON, RichPretty, RichColumns,
   RichTraceback, RichSpinner, RichProgressBar, RichStatus,
@@ -32708,32 +32710,20 @@ import {
   renderToString, Style, RichText, renderMarkup, ColorSystem,
   SPINNERS, DEFAULT_SPINNER,
   ROUNDED, DOUBLE, HEAVY, ASCII, SQUARE, MINIMAL, MARKDOWN, HORIZONTALS, SIMPLE, ASCII2,
-} from "rich-js-ink";
-
-${code}
-
+} from "./runtime.mjs";
+`;
+function wrapDemoCode(code) {
+  const isComponentDef = /^(?:function|const|let|var)\s/.test(code.trim()) || code.trim().startsWith("return ");
+  if (isComponentDef) {
+    return `${IMPORT_HEADER}
 const Component = (() => { ${code} })();
 render(React.createElement(RichThemeProvider, null, React.createElement(Component)));
 `;
   }
-  return `import React, { useState, useEffect, useCallback, useRef } from "react";
-import { render, Box, Text, useInput } from "ink";
-import {
-  RichPanel, RichTable, RichTree, RichMarkup, RichRule,
-  RichSyntax, RichMarkdown, RichJSON, RichPretty, RichColumns,
-  RichTraceback, RichSpinner, RichProgressBar, RichStatus,
-  RichProgress, RichPrompt, RichConfirm, RichSelect,
-  RichThemeProvider, useProgress, useSpinnerFrame, useRichRenderable,
-  renderToString, Style, RichText, renderMarkup, ColorSystem,
-  SPINNERS, DEFAULT_SPINNER,
-  ROUNDED, DOUBLE, HEAVY, ASCII, SQUARE, MINIMAL, MARKDOWN, HORIZONTALS, SIMPLE, ASCII2,
-} from "rich-js-ink";
-
+  return `${IMPORT_HEADER}
 function App() {
-  return (
-    <RichThemeProvider>
-      ${code}
-    </RichThemeProvider>
+  return React.createElement(RichThemeProvider, null,
+    ${code.includes("<") ? `(() => { return (${code}); })()` : code}
   );
 }
 
@@ -32741,38 +32731,21 @@ render(React.createElement(App));
 `;
 }
 function buildFileSystem() {
-  const demoFiles = {};
-  for (const demo of demos) {
-    const filename = demo.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "");
-    demoFiles[`${filename}.tsx`] = {
-      file: { contents: wrapDemo(demo.code) }
-    };
-  }
   return {
     "package.json": {
       file: {
-        contents: JSON.stringify(
-          {
-            name: "rich-js-ink-playground",
-            private: true,
-            type: "module",
-            dependencies: {
-              "rich-js-ink": "latest",
-              ink: "^7.0.0",
-              react: "^19.2.5",
-              tsx: "^4.21.0"
-            }
-          },
-          null,
-          2
-        )
+        contents: JSON.stringify({
+          name: "playground",
+          private: true,
+          type: "module"
+        })
       }
     },
-    demos: { directory: demoFiles },
-    "demo.tsx": {
-      file: {
-        contents: wrapDemo(demos[0].code)
-      }
+    "runtime.mjs": {
+      file: { contents: runtimeContent }
+    },
+    "demo.mjs": {
+      file: { contents: wrapDemoCode(demos[0].code) }
     }
   };
 }
@@ -32884,40 +32857,25 @@ var Playground = class {
     });
     resizeObserver.observe(this.terminalEl);
     this.terminal.writeln("\x1B[1;36mrich-js-ink playground\x1B[0m");
-    this.terminal.writeln("\x1B[2mBooting WebContainer...\x1B[0m");
+    this.terminal.writeln("\x1B[2mStarting...\x1B[0m");
   }
   setStatus(msg) {
     this.statusEl.textContent = msg;
   }
   async bootWebContainer() {
     try {
-      this.setStatus("Booting WebContainer...");
-      this.terminal?.writeln("\x1B[2mThis may take a moment on first load.\x1B[0m");
-      this.webcontainer = await WebContainer.boot();
+      this.setStatus("Loading...");
+      const [wc] = await Promise.all([
+        WebContainer.boot(),
+        loadRuntime()
+      ]);
+      this.webcontainer = wc;
       this.setStatus("Mounting files...");
-      this.terminal?.writeln("\x1B[2mMounting demo files...\x1B[0m");
       await this.webcontainer.mount(buildFileSystem());
-      this.setStatus("Installing dependencies (npm install)...");
-      this.terminal?.writeln("\x1B[2mInstalling dependencies...\x1B[0m\r\n");
-      const installProcess = await this.webcontainer.spawn("npm", ["install"]);
-      installProcess.output.pipeTo(
-        new WritableStream({
-          write: (data) => {
-            this.terminal?.write(data);
-          }
-        })
-      );
-      const installExitCode = await installProcess.exit;
-      if (installExitCode !== 0) {
-        this.terminal?.writeln(`\r
-\x1B[1;31mnpm install failed (exit ${installExitCode})\x1B[0m`);
-        this.setStatus("npm install failed");
-        return;
-      }
-      this.terminal?.writeln("\r\n\x1B[1;32mReady!\x1B[0m Run demos with: \x1B[1mnpx tsx demo.tsx\x1B[0m\r\n");
       await this.startShell();
       this.isReady = true;
-      this.setStatus("Ready \u2014 select a demo and press Run");
+      this.setStatus("Ready");
+      this.terminal?.writeln("\x1B[1;32mReady!\x1B[0m Type \x1B[1mnode demo.mjs\x1B[0m or click a demo + Run\r\n");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       this.terminal?.writeln(`\r
@@ -32979,60 +32937,15 @@ var Playground = class {
   async writeDemoFile() {
     if (!this.webcontainer || !this.editor) return;
     const code = this.editor.state.doc.toString();
-    const demo = demos[this.selectedIndex];
-    if (!demo) return;
-    const isComponentDef = /^(?:function|const|let|var)\s/.test(code.trim()) || code.trim().startsWith("return ");
-    let fullCode;
-    if (isComponentDef) {
-      fullCode = `import React, { useState, useEffect, useCallback, useRef } from "react";
-import { render, Box, Text, useInput } from "ink";
-import {
-  RichPanel, RichTable, RichTree, RichMarkup, RichRule,
-  RichSyntax, RichMarkdown, RichJSON, RichPretty, RichColumns,
-  RichTraceback, RichSpinner, RichProgressBar, RichStatus,
-  RichProgress, RichPrompt, RichConfirm, RichSelect,
-  RichThemeProvider, useProgress, useSpinnerFrame, useRichRenderable,
-  renderToString, Style, RichText, renderMarkup, ColorSystem,
-  SPINNERS, DEFAULT_SPINNER,
-  ROUNDED, DOUBLE, HEAVY, ASCII, SQUARE, MINIMAL, MARKDOWN, HORIZONTALS, SIMPLE, ASCII2,
-} from "rich-js-ink";
-
-const Component = (() => { ${code} })();
-render(React.createElement(RichThemeProvider, null, React.createElement(Component)));
-`;
-    } else {
-      fullCode = `import React, { useState, useEffect, useCallback, useRef } from "react";
-import { render, Box, Text, useInput } from "ink";
-import {
-  RichPanel, RichTable, RichTree, RichMarkup, RichRule,
-  RichSyntax, RichMarkdown, RichJSON, RichPretty, RichColumns,
-  RichTraceback, RichSpinner, RichProgressBar, RichStatus,
-  RichProgress, RichPrompt, RichConfirm, RichSelect,
-  RichThemeProvider, useProgress, useSpinnerFrame, useRichRenderable,
-  renderToString, Style, RichText, renderMarkup, ColorSystem,
-  SPINNERS, DEFAULT_SPINNER,
-  ROUNDED, DOUBLE, HEAVY, ASCII, SQUARE, MINIMAL, MARKDOWN, HORIZONTALS, SIMPLE, ASCII2,
-} from "rich-js-ink";
-
-function App() {
-  return (
-    <RichThemeProvider>
-      ${code}
-    </RichThemeProvider>
-  );
-}
-
-render(React.createElement(App));
-`;
-    }
-    await this.webcontainer.fs.writeFile("demo.tsx", fullCode);
+    const fullCode = wrapDemoCode(code);
+    await this.webcontainer.fs.writeFile("demo.mjs", fullCode);
   }
   async runCurrentDemo() {
     await this.writeDemoFile();
     if (this.shellWriter) {
       this.shellWriter.write("");
       await new Promise((r) => setTimeout(r, 100));
-      this.shellWriter.write("npx tsx demo.tsx\n");
+      this.shellWriter.write("node demo.mjs\n");
     }
   }
   destroy() {
