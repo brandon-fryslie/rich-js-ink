@@ -16341,6 +16341,7 @@ function readdirSync() {
 var fs_default;
 var init_fs = __esm({
   "src/shims/fs.ts"() {
+    "use strict";
     init_define_process_argv();
     init_define_process_env();
     init_define_process_versions();
@@ -87378,9 +87379,8 @@ var Playground = class {
     this.terminal = new import_xterm.Terminal({
       cols: TERM_COLS,
       rows: 12,
-      cursorBlink: false,
+      cursorBlink: true,
       cursorStyle: "bar",
-      cursorInactiveStyle: "none",
       disableStdin: false,
       fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', Consolas, monospace",
       fontSize: 13,
@@ -87430,6 +87430,7 @@ var Playground = class {
       });
     }
     this.renderCode(demo.code);
+    this.terminal?.focus();
   }
   onCodeChange() {
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
@@ -87448,7 +87449,6 @@ var Playground = class {
       this.currentInk = null;
     }
     this.terminal?.reset();
-    this.terminal?.write("\x1B[?25l");
     this.errorEl.textContent = "";
     this.errorEl.style.display = "none";
     try {
