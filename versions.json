@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "5e5f9f330b7e49595f85e11775aebeef0a9c4511",
-      "timestamp": "2026-04-15T00:41:59.636Z",
+      "sha": "122fc4b966c3c563c8a719099a06f9ea08c76344",
+      "timestamp": "2026-04-15T05:30:29.534Z",
       "commits": [
         {
-          "sha": "5e5f9f330b7e49595f85e11775aebeef0a9c4511",
+          "sha": "122fc4b966c3c563c8a719099a06f9ea08c76344",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-14T18:41:37-06:00",
-          "message": "fix(site): make terminal interactive — cursor, focus, input\n\n- Show blinking cursor so users know they can type\n- Auto-focus terminal on demo select\n- Remove forced cursor hide — let Ink manage visibility\n- Terminal now accepts keyboard input for interactive demos\n"
+          "timestamp": "2026-04-14T23:30:03-06:00",
+          "message": "feat(site): real terminal via WebContainer\n\nReplace in-browser Ink rendering with a real Node.js runtime via\nWebContainer (StackBlitz). Users get an actual shell prompt where\nthey can run demos with `npx tsx demo.tsx`.\n\nArchitecture:\n- coi-serviceworker enables SharedArrayBuffer on GitHub Pages\n- WebContainer boots, mounts demo files, runs npm install\n- jsh shell spawned and connected to xterm.js\n- Selecting a demo writes demo.tsx and runs it\n- Run button sends Ctrl+C + `npx tsx demo.tsx` to shell\n- Editor changes auto-write demo.tsx (debounced 500ms)\n\nDrops all Node polyfills (React/Ink/rich-js run inside WebContainer\nnow, not the browser) — bundle down from 3.1MB to 1.4MB.\n"
         }
       ]
     }
