@@ -195,9 +195,8 @@ export class Playground {
     this.terminal = new Terminal({
       cols: TERM_COLS,
       rows: 12,
-      cursorBlink: false,
+      cursorBlink: true,
       cursorStyle: "bar",
-      cursorInactiveStyle: "none",
       disableStdin: false,
       fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', Consolas, monospace",
       fontSize: 13,
@@ -257,6 +256,9 @@ export class Playground {
 
     // Render immediately (don't wait for debounce)
     this.renderCode(demo.code);
+
+    // Focus the terminal so keyboard input works immediately
+    this.terminal?.focus();
   }
 
   private onCodeChange(): void {
@@ -279,9 +281,8 @@ export class Playground {
       this.currentInk = null;
     }
 
-    // Clear terminal and hide cursor (Ink manages cursor visibility)
+    // Clear terminal
     this.terminal?.reset();
-    this.terminal?.write("\x1b[?25l");
     this.errorEl.textContent = "";
     this.errorEl.style.display = "none";
 
