@@ -1,149 +1,58 @@
 /**
- * Playground controller — wires the 3-column layout:
+ * Playground controller — 3-column live playground with real terminal.
+ *
  *   Column 1: Demo selector
  *   Column 2: CodeMirror editor
- *   Column 3: xterm.js live terminal
+ *   Column 3: xterm.js terminal connected to WebContainer shell
  *
- * When a demo is selected, the editor populates with its code.
- * When the editor changes, the terminal re-renders the component.
+ * WebContainer provides a real Node.js runtime in the browser.
+ * Users get a real shell prompt and can run demos with `npx tsx demo.tsx`.
  */
 
 import { Terminal } from "@xterm/xterm";
+import { FitAddon } from "@xterm/addon-fit";
+import { WebContainer } from "@webcontainer/api";
 import { EditorView, basicSetup } from "codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { EditorState } from "@codemirror/state";
 import { ViewUpdate } from "@codemirror/view";
-import { transform } from "sucrase";
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { render as inkRender, Box, Text, useInput } from "ink";
-import {
-  RichPanel,
-  RichTable,
-  RichTree,
-  RichMarkup,
-  RichRule,
-  RichSyntax,
-  RichMarkdown,
-  RichJSON,
-  RichPretty,
-  RichColumns,
-  RichTraceback,
-  RichSpinner,
-  RichProgressBar,
-  RichStatus,
-  RichProgress,
-  RichPrompt,
-  RichConfirm,
-  RichSelect,
-  RichThemeProvider,
-  useProgress,
-  useSpinnerFrame,
-  useRichRenderable,
-  renderToString,
-  Style,
-  RichText,
-  renderMarkup,
-  ColorSystem,
-  SPINNERS,
-  DEFAULT_SPINNER,
-  ROUNDED,
-  DOUBLE,
-  HEAVY,
-  ASCII,
-  SQUARE,
-  MINIMAL,
-  MARKDOWN,
-  HORIZONTALS,
-  SIMPLE,
-  ASCII2,
-} from "rich-js-ink";
-import { XtermWriteStream, XtermReadStream } from "./xterm-ink-adapter.js";
-import { demos, type Demo } from "./demos.js";
-
-// --- Scope for eval'd code ---
-// All exports available inside the editor code
-const evalScope: Record<string, unknown> = {
-  React,
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  Box,
-  Text,
-  useInput,
-  RichPanel,
-  RichTable,
-  RichTree,
-  RichMarkup,
-  RichRule,
-  RichSyntax,
-  RichMarkdown,
-  RichJSON,
-  RichPretty,
-  RichColumns,
-  RichTraceback,
-  RichSpinner,
-  RichProgressBar,
-  RichStatus,
-  RichProgress,
-  RichPrompt,
-  RichConfirm,
-  RichSelect,
-  RichThemeProvider,
-  useProgress,
-  useSpinnerFrame,
-  useRichRenderable,
-  renderToString,
-  Style,
-  RichText,
-  renderMarkup,
-  ColorSystem,
-  SPINNERS,
-  DEFAULT_SPINNER,
-  ROUNDED,
-  DOUBLE,
-  HEAVY,
-  ASCII,
-  SQUARE,
-  MINIMAL,
-  MARKDOWN,
-  HORIZONTALS,
-  SIMPLE,
-  ASCII2,
-};
-
-const TERM_COLS = 60;
+import { demos } from "./demos.js";
+import { buildFileSystem, getDemoFilename } from "./webcontainer-fs.js";
 
 export class Playground {
   private selectorEl: HTMLElement;
   private editorEl: HTMLElement;
   private terminalEl: HTMLElement;
-  private errorEl: HTMLElement;
+  private statusEl: HTMLElement;
 
   private editor: EditorView | null = null;
   private terminal: Terminal | null = null;
-  private currentInk: { unmount: () => void; cleanup: () => void } | null = null;
+  private fitAddon: FitAddon | null = null;
+  private webcontainer: WebContainer | null = null;
+  private shellWriter: WritableStreamDefaultWriter<string> | null = null;
   private selectedIndex = -1;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private isReady = false;
 
   constructor(
     selectorEl: HTMLElement,
     editorEl: HTMLElement,
     terminalEl: HTMLElement,
-    errorEl: HTMLElement,
+    statusEl: HTMLElement,
   ) {
     this.selectorEl = selectorEl;
     this.editorEl = editorEl;
     this.terminalEl = terminalEl;
-    this.errorEl = errorEl;
+    this.statusEl = statusEl;
   }
 
-  init(): void {
+  async init(): Promise<void> {
     this.buildSelector();
     this.initEditor();
     this.initTerminal();
-    this.selectDemo(0);
+    this.selectDemo(0, false); // Load first demo into editor, don't run yet
+    await this.bootWebContainer();
   }
 
   private buildSelector(): void {
@@ -156,7 +65,7 @@ export class Playground {
       li.className = "demo-item";
       li.dataset.idx = String(i);
       li.innerHTML = `<span class="demo-title">${demo.title}</span><span class="demo-desc">${demo.description}</span>`;
-      li.addEventListener("click", () => this.selectDemo(i));
+      li.addEventListener("click", () => this.selectDemo(i, true));
       ul.appendChild(li);
     }
 
@@ -193,11 +102,8 @@ export class Playground {
 
   private initTerminal(): void {
     this.terminal = new Terminal({
-      cols: TERM_COLS,
-      rows: 12,
       cursorBlink: true,
       cursorStyle: "bar",
-      disableStdin: false,
       fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', Consolas, monospace",
       fontSize: 13,
       lineHeight: 1.2,
@@ -225,10 +131,102 @@ export class Playground {
         brightWhite: "#f0f6fc",
       },
     });
+
+    this.fitAddon = new FitAddon();
+    this.terminal.loadAddon(this.fitAddon);
     this.terminal.open(this.terminalEl);
+    this.fitAddon.fit();
+
+    // Re-fit on window resize
+    const resizeObserver = new ResizeObserver(() => {
+      this.fitAddon?.fit();
+    });
+    resizeObserver.observe(this.terminalEl);
+
+    this.terminal.writeln("\x1b[1;36mrich-js-ink playground\x1b[0m");
+    this.terminal.writeln("\x1b[2mBooting WebContainer...\x1b[0m");
   }
 
-  selectDemo(index: number): void {
+  private setStatus(msg: string): void {
+    this.statusEl.textContent = msg;
+  }
+
+  private async bootWebContainer(): Promise<void> {
+    try {
+      this.setStatus("Booting WebContainer...");
+      this.terminal?.writeln("\x1b[2mThis may take a moment on first load.\x1b[0m");
+
+      this.webcontainer = await WebContainer.boot();
+
+      this.setStatus("Mounting files...");
+      this.terminal?.writeln("\x1b[2mMounting demo files...\x1b[0m");
+      await this.webcontainer.mount(buildFileSystem());
+
+      this.setStatus("Installing dependencies (npm install)...");
+      this.terminal?.writeln("\x1b[2mInstalling dependencies...\x1b[0m\r\n");
+
+      // Run npm install
+      const installProcess = await this.webcontainer.spawn("npm", ["install"]);
+      installProcess.output.pipeTo(
+        new WritableStream({
+          write: (data) => {
+            this.terminal?.write(data);
+          },
+        }),
+      );
+      const installExitCode = await installProcess.exit;
+
+      if (installExitCode !== 0) {
+        this.terminal?.writeln(`\r\n\x1b[1;31mnpm install failed (exit ${installExitCode})\x1b[0m`);
+        this.setStatus("npm install failed");
+        return;
+      }
+
+      this.terminal?.writeln("\r\n\x1b[1;32mReady!\x1b[0m Run demos with: \x1b[1mnpx tsx demo.tsx\x1b[0m\r\n");
+
+      // Start shell
+      await this.startShell();
+
+      this.isReady = true;
+      this.setStatus("Ready — select a demo and press Run");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.terminal?.writeln(`\r\n\x1b[1;31mError: ${msg}\x1b[0m`);
+      this.setStatus(`Error: ${msg}`);
+    }
+  }
+
+  private async startShell(): Promise<void> {
+    const shellProcess = await this.webcontainer!.spawn("jsh", {
+      terminal: {
+        cols: this.terminal!.cols,
+        rows: this.terminal!.rows,
+      },
+    });
+
+    // Pipe shell output → xterm.js
+    shellProcess.output.pipeTo(
+      new WritableStream({
+        write: (data) => {
+          this.terminal?.write(data);
+        },
+      }),
+    );
+
+    // Pipe xterm.js input → shell
+    const input = shellProcess.input.getWriter();
+    this.shellWriter = input;
+    this.terminal!.onData((data) => {
+      input.write(data);
+    });
+
+    // Resize shell when terminal resizes
+    this.terminal!.onResize(({ cols, rows }) => {
+      shellProcess.resize({ cols, rows });
+    });
+  }
+
+  selectDemo(index: number, run: boolean): void {
     const demo = demos[index];
     if (!demo) return;
 
@@ -239,9 +237,6 @@ export class Playground {
     });
 
     this.selectedIndex = index;
-
-    // Resize terminal for this demo
-    this.terminal?.resize(TERM_COLS, demo.rows);
 
     // Update editor content
     if (this.editor) {
@@ -254,104 +249,95 @@ export class Playground {
       });
     }
 
-    // Render immediately (don't wait for debounce)
-    this.renderCode(demo.code);
+    // Write demo file and run it
+    if (run && this.isReady) {
+      this.runCurrentDemo();
+    }
 
-    // Focus the terminal so keyboard input works immediately
     this.terminal?.focus();
   }
 
   private onCodeChange(): void {
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
-      const code = this.editor?.state.doc.toString() ?? "";
-      this.renderCode(code);
-    }, 300);
+      this.writeDemoFile();
+    }, 500);
   }
 
-  private renderCode(jsxCode: string): void {
-    // Unmount previous Ink app
-    if (this.currentInk) {
-      try {
-        this.currentInk.unmount();
-        this.currentInk.cleanup();
-      } catch {
-        // ignore cleanup errors
-      }
-      this.currentInk = null;
+  private async writeDemoFile(): Promise<void> {
+    if (!this.webcontainer || !this.editor) return;
+
+    const code = this.editor.state.doc.toString();
+    const demo = demos[this.selectedIndex];
+    if (!demo) return;
+
+    // Build the full runnable file from the editor code
+    const isComponentDef =
+      /^(?:function|const|let|var)\s/.test(code.trim()) ||
+      code.trim().startsWith("return ");
+
+    let fullCode: string;
+    if (isComponentDef) {
+      fullCode = `import React, { useState, useEffect, useCallback, useRef } from "react";
+import { render, Box, Text, useInput } from "ink";
+import {
+  RichPanel, RichTable, RichTree, RichMarkup, RichRule,
+  RichSyntax, RichMarkdown, RichJSON, RichPretty, RichColumns,
+  RichTraceback, RichSpinner, RichProgressBar, RichStatus,
+  RichProgress, RichPrompt, RichConfirm, RichSelect,
+  RichThemeProvider, useProgress, useSpinnerFrame, useRichRenderable,
+  renderToString, Style, RichText, renderMarkup, ColorSystem,
+  SPINNERS, DEFAULT_SPINNER,
+  ROUNDED, DOUBLE, HEAVY, ASCII, SQUARE, MINIMAL, MARKDOWN, HORIZONTALS, SIMPLE, ASCII2,
+} from "rich-js-ink";
+
+const Component = (() => { ${code} })();
+render(React.createElement(RichThemeProvider, null, React.createElement(Component)));
+`;
+    } else {
+      fullCode = `import React, { useState, useEffect, useCallback, useRef } from "react";
+import { render, Box, Text, useInput } from "ink";
+import {
+  RichPanel, RichTable, RichTree, RichMarkup, RichRule,
+  RichSyntax, RichMarkdown, RichJSON, RichPretty, RichColumns,
+  RichTraceback, RichSpinner, RichProgressBar, RichStatus,
+  RichProgress, RichPrompt, RichConfirm, RichSelect,
+  RichThemeProvider, useProgress, useSpinnerFrame, useRichRenderable,
+  renderToString, Style, RichText, renderMarkup, ColorSystem,
+  SPINNERS, DEFAULT_SPINNER,
+  ROUNDED, DOUBLE, HEAVY, ASCII, SQUARE, MINIMAL, MARKDOWN, HORIZONTALS, SIMPLE, ASCII2,
+} from "rich-js-ink";
+
+function App() {
+  return (
+    <RichThemeProvider>
+      ${code}
+    </RichThemeProvider>
+  );
+}
+
+render(React.createElement(App));
+`;
     }
 
-    // Clear terminal
-    this.terminal?.reset();
-    this.errorEl.textContent = "";
-    this.errorEl.style.display = "none";
+    await this.webcontainer.fs.writeFile("demo.tsx", fullCode);
+  }
 
-    try {
-      // Detect whether code defines its own component (has a top-level `return`)
-      // or is just JSX that needs wrapping.
-      const isComponentDef = /^(?:function|const|let|var)\s/.test(jsxCode.trim()) ||
-        jsxCode.trim().startsWith("return ");
+  async runCurrentDemo(): Promise<void> {
+    await this.writeDemoFile();
 
-      const wrappedCode = isComponentDef
-        ? `
-          ${jsxCode}
-        `
-        : `
-          function __PlaygroundComponent() {
-            return (
-              <RichThemeProvider>
-                ${jsxCode}
-              </RichThemeProvider>
-            );
-          }
-          return __PlaygroundComponent;
-        `;
-
-      // Transform JSX → JS
-      const { code: jsCode } = transform(wrappedCode, {
-        transforms: ["jsx"],
-        jsxRuntime: "classic",
-        jsxPragma: "React.createElement",
-        jsxFragmentPragma: "React.Fragment",
-        production: true,
-      });
-
-      // Build the eval function with all scope vars as params
-      const scopeKeys = Object.keys(evalScope);
-      const scopeValues = scopeKeys.map((k) => (evalScope as Record<string, unknown>)[k]);
-      const factory = new Function(...scopeKeys, jsCode);
-      const Component = factory(...scopeValues) as React.FC;
-
-      // Render into xterm.js via Ink
-      const stdout = new XtermWriteStream(this.terminal!) as unknown as NodeJS.WriteStream;
-      const stdin = new XtermReadStream(this.terminal!) as unknown as NodeJS.ReadStream;
-      const stderr = new XtermWriteStream(this.terminal!) as unknown as NodeJS.WriteStream;
-
-      // Always wrap in RichThemeProvider
-      const wrapped = React.createElement(RichThemeProvider, null,
-        React.createElement(Component));
-
-      this.currentInk = inkRender(wrapped, {
-        stdout,
-        stdin,
-        stderr,
-        exitOnCtrlC: false,
-        patchConsole: false,
-        interactive: true,
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      this.errorEl.textContent = msg;
-      this.errorEl.style.display = "block";
+    // Send Ctrl+C to kill any running process, then run the demo
+    if (this.shellWriter) {
+      this.shellWriter.write("\x03"); // Ctrl+C
+      // Small delay to let the shell process the Ctrl+C
+      await new Promise((r) => setTimeout(r, 100));
+      this.shellWriter.write("npx tsx demo.tsx\n");
     }
   }
 
   destroy(): void {
-    if (this.currentInk) {
-      this.currentInk.unmount();
-      this.currentInk.cleanup();
-    }
     this.editor?.destroy();
     this.terminal?.dispose();
+    this.webcontainer?.teardown();
   }
 }
