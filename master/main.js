@@ -35461,6 +35461,12 @@ var Playground = class {
     this.initEditor();
     this.initTerminal();
     this.selectDemo(0, false);
+    window.addEventListener("beforeunload", () => {
+      try {
+        this.webcontainer?.teardown();
+      } catch {
+      }
+    });
     await this.bootWebContainer();
   }
   buildSelector() {
@@ -35569,9 +35575,17 @@ var Playground = class {
       this.setStatus("Ready \u2014 select a demo and press Run");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      const stack = err instanceof Error ? err.stack : "";
       this.terminal?.writeln(`\r
 \x1B[1;31mError: ${msg}\x1B[0m`);
-      this.setStatus(`Error: ${msg}`);
+      if (stack) {
+        this.terminal?.writeln(`\x1B[2m${stack.split("\n").slice(0, 5).join("\r\n")}\x1B[0m`);
+      }
+      this.terminal?.writeln(
+        `\r
+\x1B[1;33mTry: hard refresh (Cmd/Ctrl+Shift+R) to clear service worker cache\x1B[0m`
+      );
+      this.setStatus(`Error \u2014 see terminal`);
     }
   }
   async startShell() {
