@@ -9,7 +9,6 @@
  */
 
 import type { FileSystemTree } from "@webcontainer/api";
-import { transform } from "sucrase";
 import { demos } from "./demos.js";
 
 // The runtime bundle content is fetched at page load time from runtime.mjs
@@ -40,38 +39,22 @@ export function wrapDemoCode(code: string): string {
     /^(?:function|const|let|var)\s/.test(code.trim()) ||
     code.trim().startsWith("return ");
 
-  // Build the full source (including JSX), then transform JSX → React.createElement.
-  // Node.js can't parse JSX natively; sucrase transforms it in the browser.
-  let source: string;
   if (isComponentDef) {
-    source = `${IMPORT_HEADER}
+    return `${IMPORT_HEADER}
 const Component = (() => { ${code} })();
 render(React.createElement(RichThemeProvider, null, React.createElement(Component)));
 `;
-  } else {
-    source = `${IMPORT_HEADER}
+  }
+
+  return `${IMPORT_HEADER}
 function App() {
-  return (
-    <RichThemeProvider>
-      ${code}
-    </RichThemeProvider>
+  return React.createElement(RichThemeProvider, null,
+    ${code.includes("<") ? `(() => { return (${code}); })()` : code}
   );
 }
 
 render(React.createElement(App));
 `;
-  }
-
-  // Transform JSX to React.createElement calls
-  const { code: transformed } = transform(source, {
-    transforms: ["jsx"],
-    jsxRuntime: "classic",
-    jsxPragma: "React.createElement",
-    jsxFragmentPragma: "React.Fragment",
-    production: true,
-  });
-
-  return transformed;
 }
 
 export function buildFileSystem(): FileSystemTree {
