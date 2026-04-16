@@ -35562,7 +35562,7 @@ var Playground = class {
       this.webcontainer = wc;
       this.setStatus("Mounting prebuilt environment...");
       this.terminal?.writeln("\x1B[2mMounting prebuilt node_modules + demos...\x1B[0m");
-      await this.webcontainer.mount(new Uint8Array(snapshotBuf));
+      await this.webcontainer.mount(snapshotBuf);
       this.terminal?.writeln("\r\n\x1B[1;32mReady!\x1B[0m Run demos with: \x1B[1mnode demo.js\x1B[0m\r\n");
       await this.startShell();
       this.isReady = true;
