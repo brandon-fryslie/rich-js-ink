@@ -4,15 +4,22 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "fa0d40d3149f8918e55b63cc3914590d6e9d3ae7",
-      "timestamp": "2026-04-16T05:28:44.050Z",
+      "sha": "51e7114b3f6af85c58daf6681dc7e683c725bc5d",
+      "timestamp": "2026-04-16T07:02:52.851Z",
       "commits": [
         {
-          "sha": "fa0d40d3149f8918e55b63cc3914590d6e9d3ae7",
+          "sha": "51e7114b3f6af85c58daf6681dc7e683c725bc5d",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-15T23:28:09-06:00",
-          "message": "Undo changes\n"
+          "timestamp": "2026-04-16T01:02:12-06:00",
+          "message": "fix(site): explicit rich-js dep in prebuild to resolve file: path\n"
+        },
+        {
+          "sha": "44cc4d1234ddba09e6c50017aae7617265563ab2",
+          "author_name": "Brandon Fryslie",
+          "author_email": "530235+brandon-fryslie@users.noreply.github.com",
+          "timestamp": "2026-04-16T01:00:44-06:00",
+          "message": "perf(site): pre-install node_modules as WebContainer snapshot\n\nEliminates the `npm install` step at runtime. Users fetch a prebuilt\nbinary snapshot and WebContainer mounts it instantly.\n\nAlso:\n- Drop tsx — pre-compile demos to plain JS at site build time using\n  host esbuild. WebContainer runs `node demo.js` directly.\n- Use esbuild-wasm in the browser for live edit recompilation\n  (lazy-loaded on first edit)\n- Strip maps/tests/docs from snapshot before serializing\n\nSnapshot size: 6.0 MB (down from 27.4 MB with tsx included)\nBoot time: fetch snapshot in parallel with WebContainer.boot(),\nthen instant mount — no npm install waiting\n"
         }
       ]
     }
