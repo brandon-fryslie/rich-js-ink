@@ -140,6 +140,9 @@ writeFileSync(
       dependencies: {
         ink: "^7.0.0",
         react: "^19.2.5",
+        // Explicit rich-js dep because rich-js-ink's `file:../rich-js` path
+        // won't resolve after --install-links copies rich-js-ink into prebuild/.
+        "rich-js": `file:${resolve(__dirname, "../../rich-js")}`,
         "rich-js-ink": `file:${resolve(__dirname, "..")}`,
       },
     },
@@ -163,7 +166,7 @@ for (const demo of demos) {
 // --no-bin-links: skip .bin/ symlinks (snapshot can't handle symlinks).
 console.log("  Running npm install (runtime deps only)...");
 execSync(
-  "npm install --install-links --no-bin-links --prefer-offline --no-audit --no-fund --silent",
+  "npm install --install-links --no-bin-links --prefer-offline --no-audit --no-fund",
   { cwd: prebuildDir, stdio: "inherit" },
 );
 
