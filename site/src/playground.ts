@@ -62,6 +62,17 @@ export class Playground {
     this.initEditor();
     this.initTerminal();
     this.selectDemo(0, false); // Load first demo into editor, don't run yet
+
+    // Teardown WebContainer on navigation to prevent stale SharedWorker state
+    // across page refreshes (which otherwise breaks the next boot).
+    window.addEventListener("beforeunload", () => {
+      try {
+        this.webcontainer?.teardown();
+      } catch {
+        // ignore
+      }
+    });
+
     await this.bootWebContainer();
   }
 
@@ -191,8 +202,15 @@ export class Playground {
       this.setStatus("Ready — select a demo and press Run");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      const stack = err instanceof Error ? err.stack : "";
       this.terminal?.writeln(`\r\n\x1b[1;31mError: ${msg}\x1b[0m`);
-      this.setStatus(`Error: ${msg}`);
+      if (stack) {
+        this.terminal?.writeln(`\x1b[2m${stack.split("\n").slice(0, 5).join("\r\n")}\x1b[0m`);
+      }
+      this.terminal?.writeln(
+        `\r\n\x1b[1;33mTry: hard refresh (Cmd/Ctrl+Shift+R) to clear service worker cache\x1b[0m`,
+      );
+      this.setStatus(`Error — see terminal`);
     }
   }
 
