@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "6fa85f3f590ade6e03822630e01d4089f66a2528",
-      "timestamp": "2026-04-16T07:05:25.148Z",
+      "sha": "ef0074169d65fcf3438766f9852207b97b262fd0",
+      "timestamp": "2026-04-16T07:18:17.192Z",
       "commits": [
         {
-          "sha": "6fa85f3f590ade6e03822630e01d4089f66a2528",
+          "sha": "ef0074169d65fcf3438766f9852207b97b262fd0",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-16T01:04:42-06:00",
-          "message": "fix(site): pass ArrayBuffer directly to WebContainer.mount\n"
+          "timestamp": "2026-04-16T01:17:47-06:00",
+          "message": "perf(site): bundle demos against shared lib.js — 1.9 MB snapshot\n\nShip a single pre-bundled lib.js that contains react + ink + rich-js-ink\nwith all deps inlined and Node built-ins kept external. Each demo is a\ntiny file (~1KB) that imports from \"./lib.js\".\n\nEliminates npm install in WebContainer, shared React/Ink means React\nhooks work correctly, and snapshot is 1.9 MB (was 27 MB with full\nnode_modules, or 83 MB if each demo was self-contained).\n\nBoot flow: fetch 1.9 MB snapshot in parallel with WebContainer.boot(),\nmount snapshot (instant), shell ready.\n"
         }
       ]
     }
