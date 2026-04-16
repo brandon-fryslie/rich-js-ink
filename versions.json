@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "8e6edb3ed5cf273adb12c9dc3733e88e3b34d725",
-      "timestamp": "2026-04-16T04:34:55.223Z",
+      "sha": "0c49228d539fcc2d99d025ab97b7794e7dfd23f9",
+      "timestamp": "2026-04-16T05:03:24.649Z",
       "commits": [
         {
-          "sha": "8e6edb3ed5cf273adb12c9dc3733e88e3b34d725",
+          "sha": "0c49228d539fcc2d99d025ab97b7794e7dfd23f9",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-15T22:34:30-06:00",
-          "message": "fix(site): reliable service-worker reload using navigator.serviceWorker.ready\n\ncoi-serviceworker's auto-reload races — register() can resolve before\nthe worker takes control, missing the reload trigger. Wait for\nnavigator.serviceWorker.ready (which settles after the worker is active)\nand then reload ourselves.\n"
+          "timestamp": "2026-04-15T23:03:00-06:00",
+          "message": "fix(site): prevent reload loop, show diagnostic on failure\n"
         }
       ]
     }

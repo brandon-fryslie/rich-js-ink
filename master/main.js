@@ -54387,10 +54387,22 @@ var Playground = class {
   async bootWebContainer() {
     try {
       if (!self.crossOriginIsolated) {
-        this.terminal?.writeln("\x1B[1;33mActivating service worker (first visit)...\x1B[0m");
+        const reloadAttempts = parseInt(sessionStorage.getItem("coi-reload-attempts") || "0", 10);
+        if (reloadAttempts >= 2) {
+          this.setStatus("Cross-origin isolation failed \u2014 service worker not intercepting HTML");
+          this.terminal?.writeln("\r\n\x1B[1;31mService worker didn't activate COOP/COEP headers.\x1B[0m");
+          this.terminal?.writeln("\x1B[2mDetails:\x1B[0m");
+          this.terminal?.writeln(`\x1B[2m  Service worker controller: ${navigator.serviceWorker.controller ? "yes" : "no"}\x1B[0m`);
+          this.terminal?.writeln(`\x1B[2m  Cross-origin isolated: ${self.crossOriginIsolated}\x1B[0m`);
+          this.terminal?.writeln(`\x1B[2m  SharedArrayBuffer: ${typeof SharedArrayBuffer !== "undefined" ? "available" : "unavailable"}\x1B[0m`);
+          this.terminal?.writeln("\r\n\x1B[2mTry opening in an incognito window, or clear site data.\x1B[0m");
+          sessionStorage.removeItem("coi-reload-attempts");
+          return;
+        }
+        this.terminal?.writeln("\x1B[1;33mActivating service worker...\x1B[0m");
         this.setStatus("Activating service worker...");
         if (!("serviceWorker" in navigator)) {
-          this.setStatus("Service workers unsupported \u2014 WebContainer cannot run");
+          this.setStatus("Service workers unsupported");
           this.terminal?.writeln("\r\n\x1B[1;31mYour browser doesn't support service workers.\x1B[0m");
           return;
         }
@@ -54402,15 +54414,12 @@ var Playground = class {
 \x1B[1;31mService worker registration failed: ${err}\x1B[0m`);
           return;
         }
-        if (!navigator.serviceWorker.controller) {
-          this.terminal?.writeln("\x1B[2mReloading...\x1B[0m");
-          setTimeout(() => location.reload(), 100);
-          return;
-        }
-        this.terminal?.writeln("\x1B[2mReloading to apply COOP/COEP headers...\x1B[0m");
+        sessionStorage.setItem("coi-reload-attempts", String(reloadAttempts + 1));
+        this.terminal?.writeln("\x1B[2mReloading...\x1B[0m");
         setTimeout(() => location.reload(), 100);
         return;
       }
+      sessionStorage.removeItem("coi-reload-attempts");
       this.setStatus("Loading runtime + booting WebContainer...");
       const [wc] = await Promise.all([
         WebContainer.boot(),
