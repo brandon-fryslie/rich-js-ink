@@ -7350,8 +7350,8 @@ var require_build = __commonJS({
           var column = index - offsets[line];
           return { line, column };
         };
-        LinesAndColumns3.prototype.indexForLocation = function(location) {
-          var line = location.line, column = location.column;
+        LinesAndColumns3.prototype.indexForLocation = function(location2) {
+          var line = location2.line, column = location2.column;
           if (line < 0 || line >= this.offsets.length) {
             return null;
           }
@@ -54387,13 +54387,28 @@ var Playground = class {
   async bootWebContainer() {
     try {
       if (!self.crossOriginIsolated) {
-        this.terminal?.writeln("\x1B[1;33mFirst visit: activating service worker...\x1B[0m");
-        this.terminal?.writeln("\x1B[2mThe page will reload once automatically.\x1B[0m");
-        this.setStatus("Waiting for service worker \u2014 reload if stuck");
-        setTimeout(() => {
-          this.setStatus("Not cross-origin isolated. Reload the page.");
-          this.terminal?.writeln("\r\n\x1B[1;31mReload the page to activate the service worker.\x1B[0m");
-        }, 5e3);
+        this.terminal?.writeln("\x1B[1;33mActivating service worker (first visit)...\x1B[0m");
+        this.setStatus("Activating service worker...");
+        if (!("serviceWorker" in navigator)) {
+          this.setStatus("Service workers unsupported \u2014 WebContainer cannot run");
+          this.terminal?.writeln("\r\n\x1B[1;31mYour browser doesn't support service workers.\x1B[0m");
+          return;
+        }
+        try {
+          await navigator.serviceWorker.ready;
+        } catch (err) {
+          this.setStatus("Service worker failed to register");
+          this.terminal?.writeln(`\r
+\x1B[1;31mService worker registration failed: ${err}\x1B[0m`);
+          return;
+        }
+        if (!navigator.serviceWorker.controller) {
+          this.terminal?.writeln("\x1B[2mReloading...\x1B[0m");
+          setTimeout(() => location.reload(), 100);
+          return;
+        }
+        this.terminal?.writeln("\x1B[2mReloading to apply COOP/COEP headers...\x1B[0m");
+        setTimeout(() => location.reload(), 100);
         return;
       }
       this.setStatus("Loading runtime + booting WebContainer...");

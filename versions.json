@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "3d32cdc75ecf3e3b795506ec77de9803e4fe421c",
-      "timestamp": "2026-04-16T04:31:15.846Z",
+      "sha": "8e6edb3ed5cf273adb12c9dc3733e88e3b34d725",
+      "timestamp": "2026-04-16T04:34:55.223Z",
       "commits": [
         {
-          "sha": "3d32cdc75ecf3e3b795506ec77de9803e4fe421c",
+          "sha": "8e6edb3ed5cf273adb12c9dc3733e88e3b34d725",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-15T22:30:52-06:00",
-          "message": "fix(site): handle cross-origin isolation on first visit\n\nCheck self.crossOriginIsolated before WebContainer.boot().\nIf coi-serviceworker hasn't activated yet, show a clear message\ninstead of the cryptic \"object can not be cloned\" error.\n"
+          "timestamp": "2026-04-15T22:34:30-06:00",
+          "message": "fix(site): reliable service-worker reload using navigator.serviceWorker.ready\n\ncoi-serviceworker's auto-reload races — register() can resolve before\nthe worker takes control, missing the reload trigger. Wait for\nnavigator.serviceWorker.ready (which settles after the worker is active)\nand then reload ourselves.\n"
         }
       ]
     }
