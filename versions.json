@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "271934c5ff820ca704e6ebe687ee8c7bb2fd4687",
-      "timestamp": "2026-04-16T07:23:25.317Z",
+      "sha": "d6ee4c92bcd96acefea8a40fd3e9cc668726a2b6",
+      "timestamp": "2026-04-16T09:47:49.103Z",
       "commits": [
         {
-          "sha": "271934c5ff820ca704e6ebe687ee8c7bb2fd4687",
+          "sha": "d6ee4c92bcd96acefea8a40fd3e9cc668726a2b6",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-16T01:23:00-06:00",
-          "message": "fix(site): teardown WebContainer on navigation + better error visibility\n"
+          "timestamp": "2026-04-16T03:47:15-06:00",
+          "message": "fix(site): self-heal stale COOP/COEP service worker on boot failure\n\nWhen WebContainer.boot() fails and window.crossOriginIsolated is false,\nthe coi-serviceworker is stale. Unregister only it (matched by scriptURL)\nand reload once, guarded by sessionStorage to prevent reload loops.\n\nPreviously the only recourse was a manual hard refresh or unregistering\nevery SW on the origin — which is too broad on shared origins like\n*.github.io. This targets the specific worker by identity.\n\nPrints each matched scriptURL to the terminal before unregistering so the\nreset is visible.\n"
         }
       ]
     }

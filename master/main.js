@@ -35469,6 +35469,27 @@ var Playground = class {
     });
     await this.bootWebContainer();
   }
+  /**
+   * Unregister *only* the COOP/COEP service worker (`coi-serviceworker.js`)
+   * by filtering registrations on script URL.
+   *
+   * [LAW:single-enforcer] Cross-origin isolation is owned by one SW; we target it
+   * by identity (scriptURL), never by blanket-unregistering every SW on the origin.
+   */
+  async unregisterCoiServiceWorker() {
+    if (!navigator.serviceWorker) return false;
+    const regs = await navigator.serviceWorker.getRegistrations();
+    const withUrl = regs.map((r) => ({
+      reg: r,
+      url: r.active?.scriptURL ?? r.waiting?.scriptURL ?? r.installing?.scriptURL ?? ""
+    }));
+    const ours = withUrl.filter(({ url }) => url.endsWith("/coi-serviceworker.js"));
+    for (const { url } of ours) {
+      this.terminal?.writeln(`\x1B[2m  unregistering: ${url}\x1B[0m`);
+    }
+    const results = await Promise.all(ours.map(({ reg }) => reg.unregister()));
+    return results.some(Boolean);
+  }
   buildSelector() {
     const ul = document.createElement("ul");
     ul.className = "demo-list";
@@ -35572,6 +35593,7 @@ var Playground = class {
       this.terminal?.writeln("\r\n\x1B[1;32mReady!\x1B[0m Run demos with: \x1B[1mnode demo.js\x1B[0m\r\n");
       await this.startShell();
       this.isReady = true;
+      sessionStorage.removeItem("coi-sw-reset");
       this.setStatus("Ready \u2014 select a demo and press Run");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -35580,6 +35602,21 @@ var Playground = class {
 \x1B[1;31mError: ${msg}\x1B[0m`);
       if (stack) {
         this.terminal?.writeln(`\x1B[2m${stack.split("\n").slice(0, 5).join("\r\n")}\x1B[0m`);
+      }
+      const alreadyReset = sessionStorage.getItem("coi-sw-reset") === "1";
+      if (!window.crossOriginIsolated && !alreadyReset) {
+        this.terminal?.writeln(
+          `\r
+\x1B[1;33mNot cross-origin isolated \u2014 resetting stale COOP/COEP service worker...\x1B[0m`
+        );
+        sessionStorage.setItem("coi-sw-reset", "1");
+        const didUnregister = await this.unregisterCoiServiceWorker();
+        if (didUnregister) {
+          this.terminal?.writeln(`\x1B[2mReloading to pick up a fresh service worker...\x1B[0m`);
+          window.location.reload();
+          return;
+        }
+        sessionStorage.removeItem("coi-sw-reset");
       }
       this.terminal?.writeln(
         `\r
