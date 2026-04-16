@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "0c49228d539fcc2d99d025ab97b7794e7dfd23f9",
-      "timestamp": "2026-04-16T05:03:24.649Z",
+      "sha": "92dceb513b23b04bda6c827b7ba44d8dc3c3ffe2",
+      "timestamp": "2026-04-16T05:15:47.278Z",
       "commits": [
         {
-          "sha": "0c49228d539fcc2d99d025ab97b7794e7dfd23f9",
+          "sha": "92dceb513b23b04bda6c827b7ba44d8dc3c3ffe2",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-15T23:03:00-06:00",
-          "message": "fix(site): prevent reload loop, show diagnostic on failure\n"
+          "timestamp": "2026-04-15T23:15:24-06:00",
+          "message": "revert: remove SW check that broke the working flow\n\ncoi-serviceworker already handles first-visit reload. My extra check\nwas racing with it and causing loops. Trust coi-serviceworker.\n"
         }
       ]
     }
