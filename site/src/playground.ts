@@ -157,18 +157,31 @@ export class Playground {
       // coi-serviceworker provides this on GitHub Pages, but needs a reload
       // on first visit to activate.
       if (!self.crossOriginIsolated) {
-        this.terminal?.writeln("\x1b[1;33mActivating service worker (first visit)...\x1b[0m");
+        // Prevent reload loops — only reload once per session
+        const reloadAttempts = parseInt(sessionStorage.getItem("coi-reload-attempts") || "0", 10);
+
+        if (reloadAttempts >= 2) {
+          // Tried twice and still not isolated — something is fundamentally broken
+          this.setStatus("Cross-origin isolation failed — service worker not intercepting HTML");
+          this.terminal?.writeln("\r\n\x1b[1;31mService worker didn't activate COOP/COEP headers.\x1b[0m");
+          this.terminal?.writeln("\x1b[2mDetails:\x1b[0m");
+          this.terminal?.writeln(`\x1b[2m  Service worker controller: ${navigator.serviceWorker.controller ? "yes" : "no"}\x1b[0m`);
+          this.terminal?.writeln(`\x1b[2m  Cross-origin isolated: ${self.crossOriginIsolated}\x1b[0m`);
+          this.terminal?.writeln(`\x1b[2m  SharedArrayBuffer: ${typeof SharedArrayBuffer !== "undefined" ? "available" : "unavailable"}\x1b[0m`);
+          this.terminal?.writeln("\r\n\x1b[2mTry opening in an incognito window, or clear site data.\x1b[0m");
+          sessionStorage.removeItem("coi-reload-attempts");
+          return;
+        }
+
+        this.terminal?.writeln("\x1b[1;33mActivating service worker...\x1b[0m");
         this.setStatus("Activating service worker...");
 
         if (!("serviceWorker" in navigator)) {
-          this.setStatus("Service workers unsupported — WebContainer cannot run");
+          this.setStatus("Service workers unsupported");
           this.terminal?.writeln("\r\n\x1b[1;31mYour browser doesn't support service workers.\x1b[0m");
           return;
         }
 
-        // Wait for the service worker to become active, then reload.
-        // coi-serviceworker's own auto-reload has a race condition where
-        // register() can resolve before the worker is controlling.
         try {
           await navigator.serviceWorker.ready;
         } catch (err) {
@@ -177,19 +190,14 @@ export class Playground {
           return;
         }
 
-        // Worker is active. If it's not yet controlling the page, reload.
-        if (!navigator.serviceWorker.controller) {
-          this.terminal?.writeln("\x1b[2mReloading...\x1b[0m");
-          setTimeout(() => location.reload(), 100);
-          return;
-        }
-
-        // Controller exists but crossOriginIsolated is still false — odd state.
-        // Force a hard reload.
-        this.terminal?.writeln("\x1b[2mReloading to apply COOP/COEP headers...\x1b[0m");
+        sessionStorage.setItem("coi-reload-attempts", String(reloadAttempts + 1));
+        this.terminal?.writeln("\x1b[2mReloading...\x1b[0m");
         setTimeout(() => location.reload(), 100);
         return;
       }
+
+      // Success path — clear the reload counter
+      sessionStorage.removeItem("coi-reload-attempts");
 
       this.setStatus("Loading runtime + booting WebContainer...");
 
