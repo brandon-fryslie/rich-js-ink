@@ -157,14 +157,37 @@ export class Playground {
       // coi-serviceworker provides this on GitHub Pages, but needs a reload
       // on first visit to activate.
       if (!self.crossOriginIsolated) {
-        this.terminal?.writeln("\x1b[1;33mFirst visit: activating service worker...\x1b[0m");
-        this.terminal?.writeln("\x1b[2mThe page will reload once automatically.\x1b[0m");
-        this.setStatus("Waiting for service worker — reload if stuck");
-        // coi-serviceworker will reload automatically; if it doesn't, give up after 5s
-        setTimeout(() => {
-          this.setStatus("Not cross-origin isolated. Reload the page.");
-          this.terminal?.writeln("\r\n\x1b[1;31mReload the page to activate the service worker.\x1b[0m");
-        }, 5000);
+        this.terminal?.writeln("\x1b[1;33mActivating service worker (first visit)...\x1b[0m");
+        this.setStatus("Activating service worker...");
+
+        if (!("serviceWorker" in navigator)) {
+          this.setStatus("Service workers unsupported — WebContainer cannot run");
+          this.terminal?.writeln("\r\n\x1b[1;31mYour browser doesn't support service workers.\x1b[0m");
+          return;
+        }
+
+        // Wait for the service worker to become active, then reload.
+        // coi-serviceworker's own auto-reload has a race condition where
+        // register() can resolve before the worker is controlling.
+        try {
+          await navigator.serviceWorker.ready;
+        } catch (err) {
+          this.setStatus("Service worker failed to register");
+          this.terminal?.writeln(`\r\n\x1b[1;31mService worker registration failed: ${err}\x1b[0m`);
+          return;
+        }
+
+        // Worker is active. If it's not yet controlling the page, reload.
+        if (!navigator.serviceWorker.controller) {
+          this.terminal?.writeln("\x1b[2mReloading...\x1b[0m");
+          setTimeout(() => location.reload(), 100);
+          return;
+        }
+
+        // Controller exists but crossOriginIsolated is still false — odd state.
+        // Force a hard reload.
+        this.terminal?.writeln("\x1b[2mReloading to apply COOP/COEP headers...\x1b[0m");
+        setTimeout(() => location.reload(), 100);
         return;
       }
 
