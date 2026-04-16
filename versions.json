@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "087ef452398f0701ecee375b4892f42bcb14790c",
-      "timestamp": "2026-04-16T04:27:15.719Z",
+      "sha": "3d32cdc75ecf3e3b795506ec77de9803e4fe421c",
+      "timestamp": "2026-04-16T04:31:15.846Z",
       "commits": [
         {
-          "sha": "087ef452398f0701ecee375b4892f42bcb14790c",
+          "sha": "3d32cdc75ecf3e3b795506ec77de9803e4fe421c",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-15T22:26:48-06:00",
-          "message": "fix(site): transform JSX to React.createElement before writing demo.mjs\n\nNode.js can't parse JSX natively. Use sucrase (in-browser) to transform\nJSX to React.createElement calls before writing the demo file, so Node\ncan run it directly.\n"
+          "timestamp": "2026-04-15T22:30:52-06:00",
+          "message": "fix(site): handle cross-origin isolation on first visit\n\nCheck self.crossOriginIsolated before WebContainer.boot().\nIf coi-serviceworker hasn't activated yet, show a clear message\ninstead of the cryptic \"object can not be cloned\" error.\n"
         }
       ]
     }

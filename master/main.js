@@ -54386,7 +54386,17 @@ var Playground = class {
   }
   async bootWebContainer() {
     try {
-      this.setStatus("Loading...");
+      if (!self.crossOriginIsolated) {
+        this.terminal?.writeln("\x1B[1;33mFirst visit: activating service worker...\x1B[0m");
+        this.terminal?.writeln("\x1B[2mThe page will reload once automatically.\x1B[0m");
+        this.setStatus("Waiting for service worker \u2014 reload if stuck");
+        setTimeout(() => {
+          this.setStatus("Not cross-origin isolated. Reload the page.");
+          this.terminal?.writeln("\r\n\x1B[1;31mReload the page to activate the service worker.\x1B[0m");
+        }, 5e3);
+        return;
+      }
+      this.setStatus("Loading runtime + booting WebContainer...");
       const [wc] = await Promise.all([
         WebContainer.boot(),
         loadRuntime()
@@ -54402,6 +54412,9 @@ var Playground = class {
       const msg = err instanceof Error ? err.message : String(err);
       this.terminal?.writeln(`\r
 \x1B[1;31mError: ${msg}\x1B[0m`);
+      if (msg.includes("cloned") || msg.includes("SharedArrayBuffer")) {
+        this.terminal?.writeln(`\x1B[2mTry reloading the page \u2014 the service worker may need to activate.\x1B[0m`);
+      }
       this.setStatus(`Error: ${msg}`);
     }
   }
