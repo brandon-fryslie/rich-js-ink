@@ -153,52 +153,9 @@ export class Playground {
 
   private async bootWebContainer(): Promise<void> {
     try {
-      // WebContainer requires cross-origin isolation (for SharedArrayBuffer).
-      // coi-serviceworker provides this on GitHub Pages, but needs a reload
-      // on first visit to activate.
-      if (!self.crossOriginIsolated) {
-        // Prevent reload loops — only reload once per session
-        const reloadAttempts = parseInt(sessionStorage.getItem("coi-reload-attempts") || "0", 10);
-
-        if (reloadAttempts >= 2) {
-          // Tried twice and still not isolated — something is fundamentally broken
-          this.setStatus("Cross-origin isolation failed — service worker not intercepting HTML");
-          this.terminal?.writeln("\r\n\x1b[1;31mService worker didn't activate COOP/COEP headers.\x1b[0m");
-          this.terminal?.writeln("\x1b[2mDetails:\x1b[0m");
-          this.terminal?.writeln(`\x1b[2m  Service worker controller: ${navigator.serviceWorker.controller ? "yes" : "no"}\x1b[0m`);
-          this.terminal?.writeln(`\x1b[2m  Cross-origin isolated: ${self.crossOriginIsolated}\x1b[0m`);
-          this.terminal?.writeln(`\x1b[2m  SharedArrayBuffer: ${typeof SharedArrayBuffer !== "undefined" ? "available" : "unavailable"}\x1b[0m`);
-          this.terminal?.writeln("\r\n\x1b[2mTry opening in an incognito window, or clear site data.\x1b[0m");
-          sessionStorage.removeItem("coi-reload-attempts");
-          return;
-        }
-
-        this.terminal?.writeln("\x1b[1;33mActivating service worker...\x1b[0m");
-        this.setStatus("Activating service worker...");
-
-        if (!("serviceWorker" in navigator)) {
-          this.setStatus("Service workers unsupported");
-          this.terminal?.writeln("\r\n\x1b[1;31mYour browser doesn't support service workers.\x1b[0m");
-          return;
-        }
-
-        try {
-          await navigator.serviceWorker.ready;
-        } catch (err) {
-          this.setStatus("Service worker failed to register");
-          this.terminal?.writeln(`\r\n\x1b[1;31mService worker registration failed: ${err}\x1b[0m`);
-          return;
-        }
-
-        sessionStorage.setItem("coi-reload-attempts", String(reloadAttempts + 1));
-        this.terminal?.writeln("\x1b[2mReloading...\x1b[0m");
-        setTimeout(() => location.reload(), 100);
-        return;
-      }
-
-      // Success path — clear the reload counter
-      sessionStorage.removeItem("coi-reload-attempts");
-
+      // coi-serviceworker handles cross-origin isolation on first visit
+      // (it auto-reloads once to activate). Just try to boot — if it's the
+      // first visit, WebContainer.boot() may error and we reload.
       this.setStatus("Loading runtime + booting WebContainer...");
 
       const [wc] = await Promise.all([
