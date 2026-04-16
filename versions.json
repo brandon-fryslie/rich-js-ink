@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "3eda2540cd9856935d7e58d408df954958814024",
-      "timestamp": "2026-04-15T06:56:52.736Z",
+      "sha": "087ef452398f0701ecee375b4892f42bcb14790c",
+      "timestamp": "2026-04-16T04:27:15.719Z",
       "commits": [
         {
-          "sha": "3eda2540cd9856935d7e58d408df954958814024",
+          "sha": "087ef452398f0701ecee375b4892f42bcb14790c",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-15T00:56:26-06:00",
-          "message": "perf(site): eliminate npm install — pre-built runtime bundle\n\nBuild a 1.9MB runtime.mjs at build time containing React + Ink +\nrich-js + rich-js-ink pre-bundled. Mount it directly into WebContainer.\nDemos import from ./runtime.mjs and run with `node demo.mjs`.\n\nBoot sequence is now:\n1. Fetch runtime.mjs + boot WebContainer (parallel)\n2. Mount filesystem (runtime + demo file)\n3. Spawn shell — ready\n\nNo npm install, no package downloads. Should be seconds, not minutes.\n"
+          "timestamp": "2026-04-15T22:26:48-06:00",
+          "message": "fix(site): transform JSX to React.createElement before writing demo.mjs\n\nNode.js can't parse JSX natively. Use sucrase (in-browser) to transform\nJSX to React.createElement calls before writing the demo file, so Node\ncan run it directly.\n"
         }
       ]
     }
