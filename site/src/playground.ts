@@ -306,12 +306,20 @@ function App() {
 render(React.createElement(App));
 `;
 
-    // Compile JSX → plain JS via esbuild-wasm, write demo.js
+    // Rewrite third-party imports → "./lib.js" (matches build-time layout)
+    const rewritten = jsxSource
+      .replace(/from ["']react["']/g, 'from "./lib.js"')
+      .replace(/from ["']react\/[^"']+["']/g, 'from "./lib.js"')
+      .replace(/from ["']ink["']/g, 'from "./lib.js"')
+      .replace(/from ["']rich-js-ink["']/g, 'from "./lib.js"');
+
+    // Compile JSX → plain JS via esbuild-wasm
     await initEsbuild();
-    const result = await esbuildWasm.transform(jsxSource, {
+    const result = await esbuildWasm.transform(rewritten, {
       loader: "tsx",
-      jsx: "automatic",
-      jsxImportSource: "react",
+      jsx: "transform",
+      jsxFactory: "React.createElement",
+      jsxFragment: "React.Fragment",
       target: "esnext",
       format: "esm",
     });

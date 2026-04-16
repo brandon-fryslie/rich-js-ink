@@ -107,110 +107,133 @@ function demoFilename(title: string): string {
     .replace(/-+$/, "");
 }
 
+const NODE_BUILTINS_EXTERNAL = [
+  "node:*", "fs", "path", "os", "process", "stream", "tty", "util",
+  "events", "buffer", "string_decoder", "readline", "child_process",
+  "module", "url", "assert",
+];
+
+const STUB_DEVTOOLS_PLUGIN: esbuild.Plugin = {
+  name: "stub-devtools",
+  setup(b) {
+    b.onResolve({ filter: /^react-devtools-core$/ }, () => ({
+      path: "react-devtools-core", namespace: "stub",
+    }));
+    b.onLoad({ filter: /.*/, namespace: "stub" }, () => ({
+      contents: "export function connectToDevTools(){};export default { connectToDevTools(){} };",
+      loader: "js",
+    }));
+  },
+};
+
 /**
- * Transform JSX → plain JS using host esbuild.
- * Output: a string that's valid JS with React.createElement calls.
+ * Build the shared lib.js that re-exports everything a demo needs.
+ * All demos import from "./lib.js" instead of "ink"/"react"/"rich-js-ink",
+ * so React/Ink are initialized once and shared.
  */
-function compileJSX(code: string): string {
-  const result = esbuild.transformSync(code, {
-    loader: "tsx",
+async function buildSharedLib(outPath: string): Promise<void> {
+  const libSource = `
+import * as ReactStar from "react";
+const React = ReactStar.default ?? ReactStar;
+export default React;
+export { React };
+export * from "react";
+export { render, Box, Text, useInput } from "ink";
+export * from "rich-js-ink";
+`;
+  const tempLibEntry = resolve(prebuildDir, "__lib.tsx");
+  writeFileSync(tempLibEntry, libSource);
+  await esbuild.build({
+    entryPoints: [tempLibEntry],
+    bundle: true,
+    outfile: outPath,
+    format: "esm",
+    platform: "node",
+    target: "node20",
+    external: NODE_BUILTINS_EXTERNAL,
+    plugins: [STUB_DEVTOOLS_PLUGIN],
+    loader: { ".tsx": "tsx", ".ts": "ts", ".js": "js" },
     jsx: "automatic",
     jsxImportSource: "react",
-    target: "esnext",
+    resolveExtensions: [".tsx", ".ts", ".mjs", ".js"],
+    nodePaths: [resolve(__dirname, "node_modules")],
+    mainFields: ["module", "main"],
+    // Dedupe React/Ink: force all import paths to resolve to our single copy,
+    // even the nested ones from rich-js-ink/node_modules. Multiple copies
+    // cause "Invalid hook call" errors.
+    alias: {
+      react: resolve(__dirname, "node_modules/react"),
+      "react/jsx-runtime": resolve(__dirname, "node_modules/react/jsx-runtime.js"),
+      "react/jsx-dev-runtime": resolve(__dirname, "node_modules/react/jsx-dev-runtime.js"),
+      ink: resolve(__dirname, "node_modules/ink/build/index.js"),
+    },
+    // Inject real require() from Node's module module so bundled CJS modules
+    // that do require("assert") etc. work at runtime.
+    banner: {
+      js: `import { createRequire as __esbuildCreateRequire } from "node:module"; const require = __esbuildCreateRequire(import.meta.url);`,
+    },
+  });
+  unlinkSync(tempLibEntry);
+}
+
+/**
+ * Bundle a demo against the shared lib.js.
+ * Demos are tiny (~1KB each) since all deps are in lib.js.
+ */
+async function bundleDemo(source: string, tempPath: string): Promise<string> {
+  // Rewrite all third-party imports to ./lib.js
+  const rewritten = source
+    .replace(/from ["']react["']/g, 'from "./lib.js"')
+    .replace(/from ["']react\/[^"']+["']/g, 'from "./lib.js"')
+    .replace(/from ["']ink["']/g, 'from "./lib.js"')
+    .replace(/from ["']rich-js-ink["']/g, 'from "./lib.js"');
+
+  writeFileSync(tempPath, rewritten);
+  const result = await esbuild.transform(rewritten, {
+    loader: "tsx",
+    jsx: "transform",
+    jsxFactory: "React.createElement",
+    jsxFragment: "React.Fragment",
     format: "esm",
+    target: "esnext",
   });
   return result.code;
 }
 
 console.log("Building WebContainer prebuild snapshot...");
 
-// Set up prebuild dir
+// Set up prebuild dir — only needs bundled demo files + package.json (no node_modules!)
 if (existsSync(prebuildDir)) {
   rmSync(prebuildDir, { recursive: true });
 }
 mkdirSync(prebuildDir, { recursive: true });
 
+// Minimal package.json (type: module for ESM imports)
 writeFileSync(
   resolve(prebuildDir, "package.json"),
-  JSON.stringify(
-    {
-      name: "rich-js-ink-playground",
-      private: true,
-      type: "module",
-      dependencies: {
-        ink: "^7.0.0",
-        react: "^19.2.5",
-        // Explicit rich-js dep because rich-js-ink's `file:../rich-js` path
-        // won't resolve after --install-links copies rich-js-ink into prebuild/.
-        "rich-js": `file:${resolve(__dirname, "../../rich-js")}`,
-        "rich-js-ink": `file:${resolve(__dirname, "..")}`,
-      },
-    },
-    null,
-    2,
-  ),
+  JSON.stringify({ name: "playground", private: true, type: "module" }, null, 2),
 );
 
-// Write initial demo (pre-compiled to .js) and all demos as .js
-writeFileSync(resolve(prebuildDir, "demo.js"), compileJSX(wrapDemo(demos[0]!.code)));
-mkdirSync(resolve(prebuildDir, "demos"), { recursive: true });
+// Build the shared lib.js (react + ink + rich-js-ink bundled together).
+// All demos import from "./lib.js" instead of the packages directly.
+console.log("  Building shared lib.js...");
+await buildSharedLib(resolve(prebuildDir, "lib.js"));
+
+// Bundle each demo — tiny files that just import from ./lib.js
+console.log("  Bundling demos...");
+const tempEntry = resolve(prebuildDir, "__entry.tsx");
+writeFileSync(
+  resolve(prebuildDir, "demo.js"),
+  await bundleDemo(wrapDemo(demos[0]!.code), tempEntry),
+);
+// Put all demos at top level so they can all `import from "./lib.js"`
 for (const demo of demos) {
   writeFileSync(
-    resolve(prebuildDir, "demos", `${demoFilename(demo.title)}.js`),
-    compileJSX(wrapDemo(demo.code)),
+    resolve(prebuildDir, `${demoFilename(demo.title)}.js`),
+    await bundleDemo(wrapDemo(demo.code), tempEntry),
   );
 }
-
-// Install ONLY runtime deps (no tsx — we pre-compile).
-// --install-links: resolve file: deps by copying files instead of symlinks.
-// --no-bin-links: skip .bin/ symlinks (snapshot can't handle symlinks).
-console.log("  Running npm install (runtime deps only)...");
-execSync(
-  "npm install --install-links --no-bin-links --prefer-offline --no-audit --no-fund",
-  { cwd: prebuildDir, stdio: "inherit" },
-);
-
-// Strip symlinks + bloat
-const STRIPPABLE_DIRS = new Set([
-  "test",
-  "tests",
-  "__tests__",
-  "docs",
-  "example",
-  "examples",
-]);
-const STRIPPABLE_FILE_EXTS = [".map", ".md", ".markdown"];
-const STRIPPABLE_FILES = new Set([
-  "LICENSE",
-  "LICENCE",
-  "CHANGELOG.md",
-  "CHANGELOG",
-  "HISTORY.md",
-]);
-
-function stripBloat(dir: string): void {
-  const entries = readdirSync(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const full = resolve(dir, entry.name);
-    if (entry.isSymbolicLink()) {
-      unlinkSync(full);
-    } else if (entry.isDirectory()) {
-      if (STRIPPABLE_DIRS.has(entry.name)) {
-        rmSync(full, { recursive: true, force: true });
-      } else {
-        stripBloat(full);
-      }
-    } else if (entry.isFile()) {
-      if (
-        STRIPPABLE_FILES.has(entry.name) ||
-        STRIPPABLE_FILE_EXTS.some((ext) => entry.name.endsWith(ext))
-      ) {
-        unlinkSync(full);
-      }
-    }
-  }
-}
-stripBloat(prebuildDir);
+unlinkSync(tempEntry);
 
 // Snapshot
 console.log("  Creating snapshot...");
