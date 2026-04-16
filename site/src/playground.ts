@@ -153,8 +153,22 @@ export class Playground {
 
   private async bootWebContainer(): Promise<void> {
     try {
-      // Fetch the pre-built runtime in parallel with WebContainer boot
-      this.setStatus("Loading...");
+      // WebContainer requires cross-origin isolation (for SharedArrayBuffer).
+      // coi-serviceworker provides this on GitHub Pages, but needs a reload
+      // on first visit to activate.
+      if (!self.crossOriginIsolated) {
+        this.terminal?.writeln("\x1b[1;33mFirst visit: activating service worker...\x1b[0m");
+        this.terminal?.writeln("\x1b[2mThe page will reload once automatically.\x1b[0m");
+        this.setStatus("Waiting for service worker — reload if stuck");
+        // coi-serviceworker will reload automatically; if it doesn't, give up after 5s
+        setTimeout(() => {
+          this.setStatus("Not cross-origin isolated. Reload the page.");
+          this.terminal?.writeln("\r\n\x1b[1;31mReload the page to activate the service worker.\x1b[0m");
+        }, 5000);
+        return;
+      }
+
+      this.setStatus("Loading runtime + booting WebContainer...");
 
       const [wc] = await Promise.all([
         WebContainer.boot(),
@@ -175,6 +189,9 @@ export class Playground {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       this.terminal?.writeln(`\r\n\x1b[1;31mError: ${msg}\x1b[0m`);
+      if (msg.includes("cloned") || msg.includes("SharedArrayBuffer")) {
+        this.terminal?.writeln(`\x1b[2mTry reloading the page — the service worker may need to activate.\x1b[0m`);
+      }
       this.setStatus(`Error: ${msg}`);
     }
   }
