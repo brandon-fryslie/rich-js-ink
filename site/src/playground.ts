@@ -179,7 +179,8 @@ export class Playground {
 
       this.setStatus("Mounting prebuilt environment...");
       this.terminal?.writeln("\x1b[2mMounting prebuilt node_modules + demos...\x1b[0m");
-      await this.webcontainer.mount(new Uint8Array(snapshotBuf));
+      // Pass ArrayBuffer directly — WebContainer transfers (not clones) it.
+      await this.webcontainer.mount(snapshotBuf);
 
       this.terminal?.writeln("\r\n\x1b[1;32mReady!\x1b[0m Run demos with: \x1b[1mnode demo.js\x1b[0m\r\n");
 
