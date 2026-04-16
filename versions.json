@@ -4,15 +4,15 @@
     {
       "version": "master",
       "ref": "refs/heads/master",
-      "sha": "92dceb513b23b04bda6c827b7ba44d8dc3c3ffe2",
-      "timestamp": "2026-04-16T05:15:47.278Z",
+      "sha": "9cc051c788b203008700c4007f6227c15220c2db",
+      "timestamp": "2026-04-16T05:22:36.236Z",
       "commits": [
         {
-          "sha": "92dceb513b23b04bda6c827b7ba44d8dc3c3ffe2",
+          "sha": "9cc051c788b203008700c4007f6227c15220c2db",
           "author_name": "Brandon Fryslie",
           "author_email": "530235+brandon-fryslie@users.noreply.github.com",
-          "timestamp": "2026-04-15T23:15:24-06:00",
-          "message": "revert: remove SW check that broke the working flow\n\ncoi-serviceworker already handles first-visit reload. My extra check\nwas racing with it and causing loops. Trust coi-serviceworker.\n"
+          "timestamp": "2026-04-15T23:22:10-06:00",
+          "message": "Undo safari changes\n"
         }
       ]
     }

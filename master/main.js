@@ -54386,7 +54386,7 @@ var Playground = class {
   }
   async bootWebContainer() {
     try {
-      this.setStatus("Loading runtime + booting WebContainer...");
+      this.setStatus("Loading...");
       const [wc] = await Promise.all([
         WebContainer.boot(),
         loadRuntime()
@@ -54402,9 +54402,6 @@ var Playground = class {
       const msg = err instanceof Error ? err.message : String(err);
       this.terminal?.writeln(`\r
 \x1B[1;31mError: ${msg}\x1B[0m`);
-      if (msg.includes("cloned") || msg.includes("SharedArrayBuffer")) {
-        this.terminal?.writeln(`\x1B[2mTry reloading the page \u2014 the service worker may need to activate.\x1B[0m`);
-      }
       this.setStatus(`Error: ${msg}`);
     }
   }
