@@ -6,8 +6,7 @@
  *   Column 3: xterm.js terminal connected to WebContainer shell
  *
  * WebContainer provides a real Node.js runtime in the browser.
- * The runtime bundle (React + Ink + rich-js-ink) is pre-built and
- * mounted directly — no npm install needed.
+ * Users get a real shell prompt and can run demos with `node demo.js`.
  */
 
 import { Terminal } from "@xterm/xterm";
@@ -18,8 +17,18 @@ import { javascript } from "@codemirror/lang-javascript";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { EditorState } from "@codemirror/state";
 import { ViewUpdate } from "@codemirror/view";
+import * as esbuildWasm from "esbuild-wasm";
 import { demos } from "./demos.js";
-import { loadRuntime, buildFileSystem, wrapDemoCode } from "./webcontainer-fs.js";
+
+let esbuildReady: Promise<void> | null = null;
+function initEsbuild(): Promise<void> {
+  if (!esbuildReady) {
+    esbuildReady = esbuildWasm.initialize({
+      wasmURL: "esbuild.wasm",
+    });
+  }
+  return esbuildReady;
+}
 
 export class Playground {
   private selectorEl: HTMLElement;
@@ -52,7 +61,7 @@ export class Playground {
     this.buildSelector();
     this.initEditor();
     this.initTerminal();
-    this.selectDemo(0, false);
+    this.selectDemo(0, false); // Load first demo into editor, don't run yet
     await this.bootWebContainer();
   }
 
@@ -138,13 +147,14 @@ export class Playground {
     this.terminal.open(this.terminalEl);
     this.fitAddon.fit();
 
+    // Re-fit on window resize
     const resizeObserver = new ResizeObserver(() => {
       this.fitAddon?.fit();
     });
     resizeObserver.observe(this.terminalEl);
 
     this.terminal.writeln("\x1b[1;36mrich-js-ink playground\x1b[0m");
-    this.terminal.writeln("\x1b[2mStarting...\x1b[0m");
+    this.terminal.writeln("\x1b[2mBooting WebContainer...\x1b[0m");
   }
 
   private setStatus(msg: string): void {
@@ -153,25 +163,31 @@ export class Playground {
 
   private async bootWebContainer(): Promise<void> {
     try {
-      // Fetch the pre-built runtime in parallel with WebContainer boot
-      this.setStatus("Loading...");
+      // Start fetching the prebuilt snapshot in parallel with WebContainer.boot()
+      this.setStatus("Fetching prebuilt environment...");
+      this.terminal?.writeln("\x1b[2mFetching prebuilt environment + booting...\x1b[0m");
 
-      const [wc] = await Promise.all([
+      const [snapshotBuf, wc] = await Promise.all([
+        fetch("prebuild.bin").then((r) => {
+          if (!r.ok) throw new Error(`Failed to fetch prebuild.bin: ${r.status}`);
+          return r.arrayBuffer();
+        }),
         WebContainer.boot(),
-        loadRuntime(),
       ]);
 
       this.webcontainer = wc;
 
-      this.setStatus("Mounting files...");
-      await this.webcontainer.mount(buildFileSystem());
+      this.setStatus("Mounting prebuilt environment...");
+      this.terminal?.writeln("\x1b[2mMounting prebuilt node_modules + demos...\x1b[0m");
+      await this.webcontainer.mount(new Uint8Array(snapshotBuf));
 
-      // Start shell immediately — no npm install needed
+      this.terminal?.writeln("\r\n\x1b[1;32mReady!\x1b[0m Run demos with: \x1b[1mnode demo.js\x1b[0m\r\n");
+
+      // Start shell
       await this.startShell();
 
       this.isReady = true;
-      this.setStatus("Ready");
-      this.terminal?.writeln("\x1b[1;32mReady!\x1b[0m Type \x1b[1mnode demo.mjs\x1b[0m or click a demo + Run\r\n");
+      this.setStatus("Ready — select a demo and press Run");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       this.terminal?.writeln(`\r\n\x1b[1;31mError: ${msg}\x1b[0m`);
@@ -187,6 +203,7 @@ export class Playground {
       },
     });
 
+    // Pipe shell output → xterm.js
     shellProcess.output.pipeTo(
       new WritableStream({
         write: (data) => {
@@ -195,12 +212,14 @@ export class Playground {
       }),
     );
 
+    // Pipe xterm.js input → shell
     const input = shellProcess.input.getWriter();
     this.shellWriter = input;
     this.terminal!.onData((data) => {
       input.write(data);
     });
 
+    // Resize shell when terminal resizes
     this.terminal!.onResize(({ cols, rows }) => {
       shellProcess.resize({ cols, rows });
     });
@@ -210,6 +229,7 @@ export class Playground {
     const demo = demos[index];
     if (!demo) return;
 
+    // Update selector highlight
     const items = this.selectorEl.querySelectorAll(".demo-item");
     items.forEach((el, i) => {
       el.classList.toggle("active", i === index);
@@ -217,6 +237,7 @@ export class Playground {
 
     this.selectedIndex = index;
 
+    // Update editor content
     if (this.editor) {
       this.editor.dispatch({
         changes: {
@@ -227,6 +248,7 @@ export class Playground {
       });
     }
 
+    // Write demo file and run it
     if (run && this.isReady) {
       this.runCurrentDemo();
     }
@@ -245,17 +267,71 @@ export class Playground {
     if (!this.webcontainer || !this.editor) return;
 
     const code = this.editor.state.doc.toString();
-    const fullCode = wrapDemoCode(code);
-    await this.webcontainer.fs.writeFile("demo.mjs", fullCode);
+    const demo = demos[this.selectedIndex];
+    if (!demo) return;
+
+    // Build the wrapped JSX source from the editor code
+    const isComponentDef =
+      /^(?:function|const|let|var)\s/.test(code.trim()) ||
+      code.trim().startsWith("return ");
+
+    const imports = `import React, { useState, useEffect, useCallback, useRef } from "react";
+import { render, Box, Text, useInput } from "ink";
+import {
+  RichPanel, RichTable, RichTree, RichMarkup, RichRule,
+  RichSyntax, RichMarkdown, RichJSON, RichPretty, RichColumns,
+  RichTraceback, RichSpinner, RichProgressBar, RichStatus,
+  RichProgress, RichPrompt, RichConfirm, RichSelect,
+  RichThemeProvider, useProgress, useSpinnerFrame, useRichRenderable,
+  renderToString, Style, RichText, renderMarkup, ColorSystem,
+  SPINNERS, DEFAULT_SPINNER,
+  ROUNDED, DOUBLE, HEAVY, ASCII, SQUARE, MINIMAL, MARKDOWN, HORIZONTALS, SIMPLE, ASCII2,
+} from "rich-js-ink";
+`;
+
+    const jsxSource = isComponentDef
+      ? `${imports}
+const Component = (() => { ${code} })();
+render(React.createElement(RichThemeProvider, null, React.createElement(Component)));
+`
+      : `${imports}
+function App() {
+  return (
+    <RichThemeProvider>
+      ${code}
+    </RichThemeProvider>
+  );
+}
+render(React.createElement(App));
+`;
+
+    // Compile JSX → plain JS via esbuild-wasm, write demo.js
+    await initEsbuild();
+    const result = await esbuildWasm.transform(jsxSource, {
+      loader: "tsx",
+      jsx: "automatic",
+      jsxImportSource: "react",
+      target: "esnext",
+      format: "esm",
+    });
+
+    await this.webcontainer.fs.writeFile("demo.js", result.code);
   }
 
   async runCurrentDemo(): Promise<void> {
-    await this.writeDemoFile();
+    try {
+      await this.writeDemoFile();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.terminal?.writeln(`\r\n\x1b[1;31mCompile error: ${msg}\x1b[0m`);
+      return;
+    }
 
+    // Send Ctrl+C to kill any running process, then run the demo
     if (this.shellWriter) {
-      this.shellWriter.write("\x03"); // Ctrl+C to kill previous
+      this.shellWriter.write("\x03"); // Ctrl+C
       await new Promise((r) => setTimeout(r, 100));
-      this.shellWriter.write("node demo.mjs\n");
+      this.shellWriter.write("node demo.js\n");
     }
   }
 
