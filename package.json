@@ -21,7 +21,7 @@
     "lint": "tsc --noEmit",
     "clean": "rm -rf dist",
     "demo": "tsc && node dist/demo.js",
-    "build:site": "cd site && npm run build"
+    "build:site": "cd site && pnpm run build"
   },
   "keywords": [
     "terminal",
@@ -47,5 +47,6 @@
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",
     "vitest": "^4.1.4"
-  }
+  },
+  "packageManager": "pnpm@10.28.2"
 }

@@ -46,7 +46,7 @@ Props → rich-js Renderable → Segment[] → ANSI string → <Text>{ansi}</Tex
 ## Install
 
 ```bash
-npm install rich-js-ink rich-js ink react
+pnpm add rich-js-ink rich-js ink react
 ```
 
 ## Components
